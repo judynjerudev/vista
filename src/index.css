@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+
+@layer base {
+  html {
+    font-size: 112.5%; /* 18px equivalent */
+  }
+}
+
+@theme {
+  --spacing-tiny: 2px;
+  --spacing-xsmall: 4px;
+  --spacing-small: 8px;
+  --spacing-normal: 16px;
+  --spacing-relaxed: 24px;
+  --spacing-large: 32px;
+  --spacing-xlarge: 40px;
+}
+
+@utility focusable {
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition;
+}
