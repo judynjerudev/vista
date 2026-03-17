@@ -32,9 +32,7 @@ export const Sidebar = ({ title, logo, items, onNavigate }: SidebarProps) => {
               icon={item.icon}
               format="iconThenText"
               className={item.isActive ? 'bg-indigo-50 text-indigo-700' : ''}
-              onClick={() => {
-                return onNavigate(item.href);
-              }}
+              onClick={() => onNavigate(item.href)}
             />
           );
         })}

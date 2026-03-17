@@ -45,12 +45,14 @@ export const useProjects = (): UseProjects => {
       method: 'PUT',
       body: JSON.stringify(input),
     });
-    setProjects((prev) => prev.map((p) => (p.uuid === uuid ? editedProject : p)));
+    setProjects((prev) =>
+      prev.map((project) => (project.uuid === uuid ? editedProject : project))
+    );
   };
 
   const deleteProject = async (uuid: string) => {
     await api<void>(`/api/projects/${uuid}`, { method: 'DELETE' });
-    setProjects((prev) => prev.filter((p) => p.uuid !== uuid));
+    setProjects((prev) => prev.filter((project) => project.uuid !== uuid));
   };
 
   useEffect(() => {

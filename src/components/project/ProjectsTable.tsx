@@ -1,14 +1,10 @@
-import type { Project, ProjectStatus } from '../../../shared/types';
-import { Badge } from './Badge';
-import { Edit as EditIcon, TrashCan as TrashIcon } from '@carbon/icons-react';
-import { Button } from '../layout/Button';
+import type { Project } from '../../../shared/types';
 
-const statusVariant: Record<ProjectStatus, 'neutral' | 'success' | 'warning' | 'info'> = {
-  BACKLOG: 'neutral',
-  ACTIVE: 'success',
-  BLOCKED: 'warning',
-  COMPLETED: 'info',
-};
+import { Edit as EditIcon, TrashCan as TrashIcon } from '@carbon/icons-react';
+
+import { Badge } from './Badge';
+import { statusBadgeVariant } from './statusBadgeVariant';
+import { Button } from '../layout/Button';
 
 type ProjectsTableProps = {
   projects: Project[];
@@ -61,7 +57,7 @@ export const ProjectsTable = ({ projects, onAdd, onEdit, onDelete }: ProjectsTab
                   {project.description}
                 </td>
                 <td className="px-relaxed py-normal">
-                  <Badge label={project.status} variant={statusVariant[project.status]} />
+                  <Badge label={project.status} variant={statusBadgeVariant[project.status]} />
                 </td>
                 <td className="px-relaxed py-normal">
                   <span className="text-sm text-gray-600 capitalize">
@@ -78,18 +74,14 @@ export const ProjectsTable = ({ projects, onAdd, onEdit, onDelete }: ProjectsTab
                       icon={<EditIcon size={20} />}
                       format="icon"
                       className="hover:text-indigo-600 hover:bg-indigo-50"
-                      onClick={() => {
-                        return onEdit(project);
-                      }}
+                      onClick={() => onEdit(project)}
                     />
                     <Button
                       variant="tertiary"
                       icon={<TrashIcon size={20} />}
                       format="icon"
                       className="hover:text-red-600 hover:bg-red-50"
-                      onClick={() => {
-                        return onDelete(project);
-                      }}
+                      onClick={() => onDelete(project)}
                     />
                   </div>
                 </td>
