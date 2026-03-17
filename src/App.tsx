@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import {
   Dashboard as DashboardIcon,
-  Home as HomeIcon,
   Folders as FoldersIcon,
   Group as GroupIcon,
+  Home as HomeIcon,
   Settings as SettingsIcon,
 } from '@carbon/icons-react';
 
-import { Layout } from './components/layout/Layout';
 import type { NavigationItem } from './components/layout/Sidebar';
+import { Layout } from './components/layout/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Projects } from './pages/Projects';
 
@@ -50,10 +50,9 @@ const App = () => {
       title={pageTitles[currentPath]}
       sidebarTitle="Dashboard"
       sidebarLogo={<DashboardIcon size={24} className="text-indigo-600" />}
-      navigationItems={navigationItems.map((item) => ({
-        ...item,
-        isActive: item.href === currentPath,
-      }))}
+      navigationItems={navigationItems.map((item) => {
+        return { ...item, isActive: item.href === currentPath };
+      })}
       onNavigate={setCurrentPath}
     >
       {currentPath === '/' && (

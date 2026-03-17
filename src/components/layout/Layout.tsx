@@ -1,7 +1,8 @@
-import { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-import { Sidebar, type NavigationItem } from './Sidebar';
 import { Header } from './Header';
+import { Sidebar } from './Sidebar';
+import type { NavigationItem } from './Sidebar';
 
 type LayoutProps = {
   children: ReactNode;

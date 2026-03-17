@@ -1,9 +1,12 @@
-import { useState, type SubmitEvent } from 'react';
-import type { Project, ProjectStatus, ProjectPriority } from '../../../shared/types';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+
+import type { Project, ProjectPriority, ProjectStatus } from '../../../shared/types';
+
 import { Button } from '../layout/Button';
 import { Input } from '../layout/Input';
-import { Textarea } from '../layout/Textarea';
 import { Select } from '../layout/Select';
+import { Textarea } from '../layout/Textarea';
 
 export type ProjectFormData = {
   name: string;
@@ -45,7 +48,7 @@ export const ProjectForm = ({ project, onSubmit, onCancel }: ProjectFormProps) =
   const [dueDate, setDueDate] = useState(project?.dueDate ?? '');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
     try {
