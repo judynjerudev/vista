@@ -10,6 +10,7 @@ import {
 import { Layout } from './components/layout/Layout';
 import type { NavigationItem } from './components/layout/Sidebar';
 import { Dashboard } from './pages/Dashboard';
+import { Projects } from './pages/Projects';
 
 const navigationItems: NavigationItem[] = [
   {
@@ -55,8 +56,10 @@ const App = () => {
       }))}
       onNavigate={setCurrentPath}
     >
-      {currentPath === '/' && <Dashboard />}
-      {currentPath === '/projects' && <p className="text-gray-500">Projects page coming soon.</p>}
+      {currentPath === '/' && (
+        <Dashboard onNavigateToProjects={() => setCurrentPath('/projects')} />
+      )}
+      {currentPath === '/projects' && <Projects />}
       {currentPath === '/team' && <p className="text-gray-500">Team page coming soon.</p>}
       {currentPath === '/settings' && <p className="text-gray-500">Settings page coming soon.</p>}
     </Layout>

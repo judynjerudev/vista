@@ -1,20 +1,16 @@
-import type { Project, ProjectStatus } from '../../../shared/types';
-import { Badge } from './Badge';
-import { Edit as EditIcon, TrashCan as TrashIcon } from '@carbon/icons-react';
-import { Button } from '../layout/Button';
+import type { Project } from '../../../shared/types';
 
-const statusVariant: Record<ProjectStatus, 'neutral' | 'success' | 'warning' | 'info'> = {
-  BACKLOG: 'neutral',
-  ACTIVE: 'success',
-  BLOCKED: 'warning',
-  COMPLETED: 'info',
-};
+import { Edit as EditIcon, TrashCan as TrashIcon } from '@carbon/icons-react';
+
+import { Badge } from './Badge';
+import { statusBadgeVariant } from './statusBadgeVariant';
+import { Button } from '../layout/Button';
 
 type ProjectsTableProps = {
   projects: Project[];
-  onAdd: () => void;
-  onEdit: (project: Project) => void;
-  onDelete: (project: Project) => void;
+  onAdd?: () => void;
+  onEdit?: (project: Project) => void;
+  onDelete?: (project: Project) => void;
 };
 
 export const ProjectsTable = ({ projects, onAdd, onEdit, onDelete }: ProjectsTableProps) => {
@@ -22,10 +18,12 @@ export const ProjectsTable = ({ projects, onAdd, onEdit, onDelete }: ProjectsTab
     return (
       <div className="rounded-lg border border-dashed border-gray-300 p-12 text-center">
         <p className="text-sm text-gray-500">No projects yet.</p>
-        <Button variant="primary" text="Add Project" onClick={onAdd} />
+        {onAdd && <Button variant="primary" text="Add Project" onClick={onAdd} />}
       </div>
     );
   }
+
+  const showActions = onEdit !== undefined || onDelete !== undefined;
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
@@ -47,9 +45,11 @@ export const ProjectsTable = ({ projects, onAdd, onEdit, onDelete }: ProjectsTab
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
               Due Date
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-              Actions
-            </th>
+            {showActions && (
+              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                Actions
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
@@ -61,7 +61,7 @@ export const ProjectsTable = ({ projects, onAdd, onEdit, onDelete }: ProjectsTab
                   {project.description}
                 </td>
                 <td className="px-relaxed py-normal">
-                  <Badge label={project.status} variant={statusVariant[project.status]} />
+                  <Badge label={project.status} variant={statusBadgeVariant[project.status]} />
                 </td>
                 <td className="px-relaxed py-normal">
                   <span className="text-sm text-gray-600 capitalize">
@@ -71,28 +71,30 @@ export const ProjectsTable = ({ projects, onAdd, onEdit, onDelete }: ProjectsTab
                 <td className="px-relaxed py-normal text-sm text-gray-500">
                   {project.dueDate ?? '—'}
                 </td>
-                <td className="px-relaxed py-normal text-right">
-                  <div className="flex justify-end">
-                    <Button
-                      variant="tertiary"
-                      icon={<EditIcon size={20} />}
-                      format="icon"
-                      className="hover:text-indigo-600 hover:bg-indigo-50"
-                      onClick={() => {
-                        return onEdit(project);
-                      }}
-                    />
-                    <Button
-                      variant="tertiary"
-                      icon={<TrashIcon size={20} />}
-                      format="icon"
-                      className="hover:text-red-600 hover:bg-red-50"
-                      onClick={() => {
-                        return onDelete(project);
-                      }}
-                    />
-                  </div>
-                </td>
+                {showActions && (
+                  <td className="px-relaxed py-normal text-right">
+                    <div className="flex justify-end">
+                      {onEdit && (
+                        <Button
+                          variant="tertiary"
+                          icon={<EditIcon size={20} />}
+                          format="icon"
+                          className="hover:text-indigo-600 hover:bg-indigo-50"
+                          onClick={() => onEdit(project)}
+                        />
+                      )}
+                      {onDelete && (
+                        <Button
+                          variant="tertiary"
+                          icon={<TrashIcon size={20} />}
+                          format="icon"
+                          className="hover:text-red-600 hover:bg-red-50"
+                          onClick={() => onDelete(project)}
+                        />
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             );
           })}

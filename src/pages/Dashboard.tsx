@@ -2,9 +2,12 @@ import { useState } from 'react';
 
 import type { Project } from '../../shared/types';
 import { useProjects } from '../hooks/useProjects';
+import { DueSoonCard } from '../components/overview/DueSoonCard';
+import { PriorityBreakdownCard } from '../components/overview/PriorityBreakdownCard';
 import { ProjectsTable } from '../components/project/ProjectsTable';
 import { ProjectForm } from '../components/project/ProjectForm';
-import { Button } from '../components/layout/Button';
+import { RecentlyUpdatedCard } from '../components/overview/RecentlyUpdatedCard';
+import { StatusDistributionCard } from '../components/overview/StatusDistributionCard';
 
 type StatVariant = 'default' | 'active' | 'blocked' | 'completed';
 
@@ -32,15 +35,14 @@ const StatisticsCard = ({
   );
 };
 
-export const Dashboard = () => {
-  const { projects, loading, error, createProject, updateProject, deleteProject } = useProjects();
+type DashboardProps = {
+  onNavigateToProjects?: () => void;
+};
+
+export const Dashboard = ({ onNavigateToProjects }: DashboardProps) => {
+  const { projects, loading, error, createProject, updateProject } = useProjects();
   const [formOpen, setFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | undefined>();
-
-  const openCreateForm = () => {
-    setEditingProject(undefined);
-    setFormOpen(true);
-  };
 
   const openEditForm = (project: Project) => {
     setEditingProject(project);
@@ -52,12 +54,11 @@ export const Dashboard = () => {
     setEditingProject(undefined);
   };
 
-  const handleDelete = async (project: Project) => {
-    if (!confirm(`Delete "${project.name}"?`)) {
-      return;
-    }
-    await deleteProject(project.uuid);
-  };
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const recentProjects = projects.filter((project) => {
+    return new Date(project.createdAt).getTime() >= thirtyDaysAgo.getTime();
+  });
 
   return (
     <div className="space-y-10">
@@ -65,34 +66,42 @@ export const Dashboard = () => {
         <StatisticsCard label="Total Projects" value={projects.length} />
         <StatisticsCard
           label="Active"
-          value={projects.filter((p) => p.status === 'ACTIVE').length}
+          value={projects.filter((project) => project.status === 'ACTIVE').length}
           variant="active"
         />
         <StatisticsCard
           label="Blocked"
-          value={projects.filter((p) => p.status === 'BLOCKED').length}
+          value={projects.filter((project) => project.status === 'BLOCKED').length}
           variant="blocked"
         />
         <StatisticsCard
           label="Completed"
-          value={projects.filter((p) => p.status === 'COMPLETED').length}
+          value={projects.filter((project) => project.status === 'COMPLETED').length}
           variant="completed"
         />
       </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatusDistributionCard projects={projects} />
+        <PriorityBreakdownCard projects={projects} />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <DueSoonCard
+          projects={projects}
+          onEdit={openEditForm}
+          onViewAll={onNavigateToProjects}
+        />
+        <RecentlyUpdatedCard
+          projects={projects}
+          onEdit={openEditForm}
+          onViewAll={onNavigateToProjects}
+        />
+      </div>
       <div className="space-y-normal">
-        <div className="flex justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Projects</h2>
-          <Button variant="primary" text="Add Project" onClick={openCreateForm} />
-        </div>
+        <h2 className="text-lg font-semibold text-gray-900">Recent Projects</h2>
         {loading && <p className="text-sm text-gray-500">Loading projects...</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
         {!loading && !error && (
-          <ProjectsTable
-            projects={projects}
-            onAdd={openCreateForm}
-            onEdit={openEditForm}
-            onDelete={handleDelete}
-          />
+          <ProjectsTable projects={recentProjects} />
         )}
       </div>
 
