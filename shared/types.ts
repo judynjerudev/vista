@@ -1,6 +1,8 @@
-export type ProjectStatus = 'BACKLOG' | 'ACTIVE' | 'BLOCKED' | 'COMPLETED';
+export const projectStatuses = ['BACKLOG', 'ACTIVE', 'BLOCKED', 'COMPLETED'] as const;
+export type ProjectStatus = (typeof projectStatuses)[number];
 
-export type ProjectPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export const projectPriorities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
+export type ProjectPriority = (typeof projectPriorities)[number];
 
 export interface Project {
   uuid: string;
