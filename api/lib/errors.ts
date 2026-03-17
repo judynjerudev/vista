@@ -9,11 +9,11 @@ export class ApiError extends Error {
   }
 }
 
-export function notFound(resource: string): ApiError {
+export const notFound = (resource: string): ApiError => {
   return new ApiError(404, `${resource} not found`);
-}
+};
 
-export function sendError(res: VercelResponse, error: unknown): void {
+export const sendError = (res: VercelResponse, error: unknown): void => {
   if (error instanceof ApiError) {
     res.status(error.statusCode).json({ error: error.message });
     return;
@@ -21,4 +21,4 @@ export function sendError(res: VercelResponse, error: unknown): void {
 
   console.error('Unhandled error:', error);
   res.status(500).json({ error: 'Internal server error' });
-}
+};

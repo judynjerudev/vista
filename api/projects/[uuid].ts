@@ -23,7 +23,7 @@ const handleDelete = async (response: VercelResponse, uuid: string) => {
   return response.status(204).end();
 };
 
-export default async function handler(request: VercelRequest, response: VercelResponse) {
+const handler = async (request: VercelRequest, response: VercelResponse) => {
   try {
     const uuid = request.query.uuid as string;
 
@@ -36,4 +36,6 @@ export default async function handler(request: VercelRequest, response: VercelRe
   } catch (error) {
     return sendError(response, error);
   }
-}
+};
+
+export default handler;
