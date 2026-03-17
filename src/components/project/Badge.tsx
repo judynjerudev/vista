@@ -1,4 +1,4 @@
-type BadgeVariant = 'neutral' | 'success' | 'warning' | 'info';
+export type BadgeVariant = 'neutral' | 'success' | 'warning' | 'info';
 
 const variantStyles: Record<BadgeVariant, string> = {
   neutral: 'bg-gray-50 text-gray-700 ring-gray-600/20',
