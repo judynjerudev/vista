@@ -1,4 +1,6 @@
-import { type ZodType, ZodError } from 'zod';
+import { ZodError } from 'zod';
+import type { ZodType } from 'zod';
+
 import { ApiError } from '../lib/errors.js';
 
 export const validate = <T>(schema: ZodType<T>, data: unknown): T => {

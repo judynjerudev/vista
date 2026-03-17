@@ -7,7 +7,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T>(path: string, options?: RequestInit): Promise<T> {
+export const api = async <T>(path: string, options?: RequestInit): Promise<T> => {
   const response = await fetch(path, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
@@ -24,4 +24,4 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
     return undefined as T;
   }
   return response.json() as Promise<T>;
-}
+};

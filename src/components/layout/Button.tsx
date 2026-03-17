@@ -31,7 +31,12 @@ export const Button = ({
     <button
       type={type}
       disabled={disabled}
-      className={`focusable flex items-center gap-normal rounded-md px-normal py-small text-sm font-medium ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${variantStyles[variant]} ${className}`}
+      className={[
+        'focusable flex items-center gap-normal rounded-md px-normal py-small text-sm font-medium',
+        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+        variantStyles[variant],
+        className,
+      ].join(' ')}
       {...rest}
     >
       {format === 'icon' && icon}

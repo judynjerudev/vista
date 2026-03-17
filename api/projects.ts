@@ -20,7 +20,7 @@ const handlePost = async (request: VercelRequest, response: VercelResponse) => {
   return response.status(201).json(project);
 };
 
-export default async function handler(request: VercelRequest, response: VercelResponse) {
+const handler = async (request: VercelRequest, response: VercelResponse) => {
   try {
     if (request.method === 'GET') return await handleGet(request, response);
     if (request.method === 'POST') return await handlePost(request, response);
@@ -30,4 +30,6 @@ export default async function handler(request: VercelRequest, response: VercelRe
   } catch (error) {
     return sendError(response, error);
   }
-}
+};
+
+export default handler;
