@@ -55,7 +55,9 @@ const App = () => {
       }))}
       onNavigate={setCurrentPath}
     >
-      {currentPath === '/' && <Dashboard />}
+      {currentPath === '/' && (
+        <Dashboard onNavigateToProjects={() => setCurrentPath('/projects')} />
+      )}
       {currentPath === '/projects' && <p className="text-gray-500">Projects page coming soon.</p>}
       {currentPath === '/team' && <p className="text-gray-500">Team page coming soon.</p>}
       {currentPath === '/settings' && <p className="text-gray-500">Settings page coming soon.</p>}

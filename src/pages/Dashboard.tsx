@@ -2,8 +2,12 @@ import { useState } from 'react';
 
 import type { Project } from '../../shared/types';
 import { useProjects } from '../hooks/useProjects';
+import { DueSoonCard } from '../components/overview/DueSoonCard';
+import { PriorityBreakdownCard } from '../components/overview/PriorityBreakdownCard';
 import { ProjectsTable } from '../components/project/ProjectsTable';
 import { ProjectForm } from '../components/project/ProjectForm';
+import { RecentlyUpdatedCard } from '../components/overview/RecentlyUpdatedCard';
+import { StatusDistributionCard } from '../components/overview/StatusDistributionCard';
 import { Button } from '../components/layout/Button';
 
 type StatVariant = 'default' | 'active' | 'blocked' | 'completed';
@@ -32,7 +36,11 @@ const StatisticsCard = ({
   );
 };
 
-export const Dashboard = () => {
+type DashboardProps = {
+  onNavigateToProjects?: () => void;
+};
+
+export const Dashboard = ({ onNavigateToProjects }: DashboardProps) => {
   const { projects, loading, error, createProject, updateProject, deleteProject } = useProjects();
   const [formOpen, setFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | undefined>();
@@ -65,18 +73,34 @@ export const Dashboard = () => {
         <StatisticsCard label="Total Projects" value={projects.length} />
         <StatisticsCard
           label="Active"
-          value={projects.filter((p) => p.status === 'ACTIVE').length}
+          value={projects.filter((project) => project.status === 'ACTIVE').length}
           variant="active"
         />
         <StatisticsCard
           label="Blocked"
-          value={projects.filter((p) => p.status === 'BLOCKED').length}
+          value={projects.filter((project) => project.status === 'BLOCKED').length}
           variant="blocked"
         />
         <StatisticsCard
           label="Completed"
-          value={projects.filter((p) => p.status === 'COMPLETED').length}
+          value={projects.filter((project) => project.status === 'COMPLETED').length}
           variant="completed"
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatusDistributionCard projects={projects} />
+        <PriorityBreakdownCard projects={projects} />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <DueSoonCard
+          projects={projects}
+          onEdit={openEditForm}
+          onViewAll={onNavigateToProjects}
+        />
+        <RecentlyUpdatedCard
+          projects={projects}
+          onEdit={openEditForm}
+          onViewAll={onNavigateToProjects}
         />
       </div>
       <div className="space-y-normal">
