@@ -1,4 +1,4 @@
-import type { VercelResponse } from '@vercel/node';
+import type { VercelResponse } from "@vercel/node";
 
 export class ApiError extends Error {
   constructor(
@@ -19,6 +19,6 @@ export const sendError = (res: VercelResponse, error: unknown): void => {
     return;
   }
 
-  console.error('Unhandled error:', error);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error("Unhandled error:", error);
+  res.status(500).json({ error: "Internal server error" });
 };

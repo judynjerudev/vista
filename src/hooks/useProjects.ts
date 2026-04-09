@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
-import type { Project } from '../../shared/types';
-import { api, ApiError } from '../api/client';
-import type { CreateProjectInput, UpdateProjectInput } from '../../api/lib/schemas';
+import { useState, useEffect } from "react";
+import type { Project } from "../../shared/types";
+import { api, ApiError } from "../api/client";
+import type {
+  CreateProjectInput,
+  UpdateProjectInput,
+} from "../../api/lib/schemas";
 
 type UseProjects = {
   projects: Project[];
@@ -22,10 +25,11 @@ export const useProjects = (): UseProjects => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api<Project[]>('/api/projects');
+      const data = await api<Project[]>("/api/projects");
       setProjects(data);
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Failed to load projects';
+      const message =
+        err instanceof ApiError ? err.message : "Failed to load projects";
       setError(message);
     } finally {
       setLoading(false);
@@ -33,8 +37,8 @@ export const useProjects = (): UseProjects => {
   };
 
   const createProject = async (input: CreateProjectInput) => {
-    const newProject = await api<Project>('/api/projects', {
-      method: 'POST',
+    const newProject = await api<Project>("/api/projects", {
+      method: "POST",
       body: JSON.stringify(input),
     });
     setProjects((prev) => [...prev, newProject]);
@@ -42,16 +46,16 @@ export const useProjects = (): UseProjects => {
 
   const updateProject = async (uuid: string, input: UpdateProjectInput) => {
     const editedProject = await api<Project>(`/api/projects/${uuid}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(input),
     });
     setProjects((prev) =>
-      prev.map((project) => (project.uuid === uuid ? editedProject : project))
+      prev.map((project) => (project.uuid === uuid ? editedProject : project)),
     );
   };
 
   const deleteProject = async (uuid: string) => {
-    await api<void>(`/api/projects/${uuid}`, { method: 'DELETE' });
+    await api<void>(`/api/projects/${uuid}`, { method: "DELETE" });
     setProjects((prev) => prev.filter((project) => project.uuid !== uuid));
   };
 

@@ -1,10 +1,15 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps } from "react";
 
 type TextareaProps = {
   label: string;
-} & ComponentProps<'textarea'>;
+} & ComponentProps<"textarea">;
 
-export const Textarea = ({ label, id, className = '', ...rest }: TextareaProps) => {
+export const Textarea = ({
+  label,
+  id,
+  className = "",
+  ...rest
+}: TextareaProps) => {
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
