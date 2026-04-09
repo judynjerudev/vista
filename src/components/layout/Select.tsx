@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps } from "react";
 
 type SelectOption = {
   value: string;
@@ -8,9 +8,15 @@ type SelectOption = {
 type SelectProps = {
   label: string;
   options: SelectOption[];
-} & ComponentProps<'select'>;
+} & ComponentProps<"select">;
 
-export const Select = ({ label, options, id, className = '', ...rest }: SelectProps) => {
+export const Select = ({
+  label,
+  options,
+  id,
+  className = "",
+  ...rest
+}: SelectProps) => {
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">

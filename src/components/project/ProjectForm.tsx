@@ -1,12 +1,16 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
+import { useState } from "react";
+import type { FormEvent } from "react";
 
-import type { Project, ProjectPriority, ProjectStatus } from '../../../shared/types';
+import type {
+  Project,
+  ProjectPriority,
+  ProjectStatus,
+} from "../../../shared/types";
 
-import { Button } from '../layout/Button';
-import { Input } from '../layout/Input';
-import { Select } from '../layout/Select';
-import { Textarea } from '../layout/Textarea';
+import { Button } from "../layout/Button";
+import { Input } from "../layout/Input";
+import { Select } from "../layout/Select";
+import { Textarea } from "../layout/Textarea";
 
 export type ProjectFormData = {
   name: string;
@@ -24,28 +28,36 @@ type ProjectFormProps = {
 };
 
 const projectStatuses = [
-  { value: 'BACKLOG', label: 'Backlog' },
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'BLOCKED', label: 'Blocked' },
-  { value: 'COMPLETED', label: 'Completed' },
+  { value: "BACKLOG", label: "Backlog" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "BLOCKED", label: "Blocked" },
+  { value: "COMPLETED", label: "Completed" },
 ];
 
 const projectPriorities = [
-  { value: 'LOW', label: 'Low' },
-  { value: 'MEDIUM', label: 'Medium' },
-  { value: 'HIGH', label: 'High' },
-  { value: 'CRITICAL', label: 'Critical' },
+  { value: "LOW", label: "Low" },
+  { value: "MEDIUM", label: "Medium" },
+  { value: "HIGH", label: "High" },
+  { value: "CRITICAL", label: "Critical" },
 ];
 
-export const ProjectForm = ({ project, onSubmit, onCancel }: ProjectFormProps) => {
+export const ProjectForm = ({
+  project,
+  onSubmit,
+  onCancel,
+}: ProjectFormProps) => {
   const isEditing = !!project;
 
-  const [name, setName] = useState(project?.name ?? '');
-  const [description, setDescription] = useState(project?.description ?? '');
-  const [status, setStatus] = useState<ProjectStatus>(project?.status ?? 'BACKLOG');
-  const [priority, setPriority] = useState<ProjectPriority>(project?.priority ?? 'MEDIUM');
-  const [ownerUuid, setOwnerUuid] = useState(project?.ownerUuid ?? '');
-  const [dueDate, setDueDate] = useState(project?.dueDate ?? '');
+  const [name, setName] = useState(project?.name ?? "");
+  const [description, setDescription] = useState(project?.description ?? "");
+  const [status, setStatus] = useState<ProjectStatus>(
+    project?.status ?? "BACKLOG",
+  );
+  const [priority, setPriority] = useState<ProjectPriority>(
+    project?.priority ?? "MEDIUM",
+  );
+  const [ownerUuid, setOwnerUuid] = useState(project?.ownerUuid ?? "");
+  const [dueDate, setDueDate] = useState(project?.dueDate ?? "");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -77,7 +89,7 @@ export const ProjectForm = ({ project, onSubmit, onCancel }: ProjectFormProps) =
         }}
       >
         <h2 className="mb-normal text-lg font-semibold text-gray-900">
-          {isEditing ? 'Edit Project' : 'New Project'}
+          {isEditing ? "Edit Project" : "New Project"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -147,11 +159,18 @@ export const ProjectForm = ({ project, onSubmit, onCancel }: ProjectFormProps) =
           </div>
 
           <div className="flex justify-end gap-3 pt-small">
-            <Button type="button" onClick={onCancel} variant="secondary" text="Cancel" />
+            <Button
+              type="button"
+              onClick={onCancel}
+              variant="secondary"
+              text="Cancel"
+            />
             <Button
               type="submit"
               variant="primary"
-              text={submitting ? 'Saving...' : isEditing ? 'Save' : 'Create Project'}
+              text={
+                submitting ? "Saving..." : isEditing ? "Save" : "Create Project"
+              }
               disabled={submitting}
             />
           </div>

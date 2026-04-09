@@ -1,10 +1,10 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps } from "react";
 
 type InputProps = {
   label: string;
-} & ComponentProps<'input'>;
+} & ComponentProps<"input">;
 
-export const Input = ({ label, id, className = '', ...rest }: InputProps) => {
+export const Input = ({ label, id, className = "", ...rest }: InputProps) => {
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">

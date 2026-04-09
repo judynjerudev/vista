@@ -1,52 +1,83 @@
-import type { Project } from '../../../shared/types';
+import type { Project, ProjectStatus } from "../../../shared/types";
 
-import { Edit as EditIcon } from '@carbon/icons-react';
-
-import { Button } from '../layout/Button';
-import { OverviewCard } from './OverviewCard';
-import { formatRelativeTime } from '../../utils/relativeTime';
+import { OverviewCard } from "./OverviewCard";
+import { formatDate } from "../../utils/relativeTime";
 
 type RecentlyUpdatedCardProps = {
   projects: Project[];
-  onEdit: (project: Project) => void;
   onViewAll?: () => void;
 };
 
-export const RecentlyUpdatedCard = ({ projects, onEdit, onViewAll }: RecentlyUpdatedCardProps) => {
+const avatarPalette = [
+  "bg-violet-100 text-violet-700",
+  "bg-sky-100 text-sky-700",
+  "bg-amber-100 text-amber-700",
+  "bg-teal-100 text-teal-700",
+  "bg-rose-100 text-rose-600",
+];
+
+const statusDot: Record<ProjectStatus, string> = {
+  BACKLOG: "bg-slate-300",
+  ACTIVE: "bg-sky-400",
+  BLOCKED: "bg-rose-400",
+  COMPLETED: "bg-emerald-400",
+};
+
+const getAvatarColor = (name: string): string => {
+  const idx =
+    name.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0) %
+    avatarPalette.length;
+  return avatarPalette[idx];
+};
+
+const getInitials = (name: string): string =>
+  name
+    .split(" ")
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+export const RecentlyUpdatedCard = ({
+  projects,
+  onViewAll,
+}: RecentlyUpdatedCardProps) => {
   if (projects.length === 0) {
     return (
       <OverviewCard title="Recently updated">
-        <p className="text-sm text-gray-500">No projects yet.</p>
+        <p className="text-sm text-gray-400">No projects yet.</p>
       </OverviewCard>
     );
   }
 
   return (
     <OverviewCard title="Recently updated" onViewAll={onViewAll}>
-      <ul className="space-y-normal">
-        {projects.map((project) => {
-          return (
-            <li
-              key={project.uuid}
-              className="flex items-center justify-between gap-normal rounded-md py-xsmall"
+      <ul className="space-y-0.5">
+        {projects.map((project) => (
+          <li
+            key={project.uuid}
+            className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors duration-150 hover:bg-gray-50"
+          >
+            <div
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${getAvatarColor(project.name)}`}
             >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-gray-900">{project.name}</p>
-                <p className="text-xs text-gray-500">{formatRelativeTime(project.updatedAt)}</p>
-              </div>
-              <Button
-                variant="tertiary"
-                format="icon"
-                icon={<EditIcon size={16} />}
-                className="shrink-0 hover:text-indigo-600 hover:bg-indigo-50"
-                onClick={() => {
-                  return onEdit(project);
-                }}
-                aria-label={`Edit ${project.name}`}
-              />
-            </li>
-          );
-        })}
+              {getInitials(project.name)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-gray-900">
+                {project.name}
+              </p>
+              <p className="text-xs text-gray-400">
+                {formatDate(project.updatedAt)}
+              </p>
+            </div>
+            <div
+              className={`h-2 w-2 shrink-0 rounded-full ${statusDot[project.status]}`}
+              aria-label={project.status}
+            />
+          </li>
+        ))}
       </ul>
     </OverviewCard>
   );

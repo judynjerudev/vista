@@ -1,14 +1,22 @@
-import type { Project } from '../../shared/types';
+import type { Project } from "../../shared/types";
 
-import { Button } from '../components/layout/Button';
-import { ProjectForm } from '../components/project/ProjectForm';
-import { ProjectsTable } from '../components/project/ProjectsTable';
-import { useProjectForm } from '../hooks/useProjectForm';
-import { useProjects } from '../hooks/useProjects';
+import { Button } from "../components/layout/Button";
+import { ProjectForm } from "../components/project/ProjectForm";
+import { ProjectsTable } from "../components/project/ProjectsTable";
+import { useProjectForm } from "../hooks/useProjectForm";
+import { useProjects } from "../hooks/useProjects";
 
 export const Projects = () => {
-  const { projects, loading, error, createProject, updateProject, deleteProject } = useProjects();
-  const { formOpen, editingProject, openCreateForm, openEditForm, closeForm } = useProjectForm();
+  const {
+    projects,
+    loading,
+    error,
+    createProject,
+    updateProject,
+    deleteProject,
+  } = useProjects();
+  const { formOpen, editingProject, openCreateForm, openEditForm, closeForm } =
+    useProjectForm();
 
   const handleDelete = async (project: Project) => {
     if (!confirm(`Delete "${project.name}"?`)) {

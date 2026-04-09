@@ -1,13 +1,15 @@
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from "react";
 
-type ButtonVariant = 'primary' | 'secondary' | 'tertiary';
-type ButtonFormat = 'icon' | 'text' | 'iconThenText' | 'textThenIcon';
+type ButtonVariant = "primary" | "secondary" | "tertiary";
+type ButtonFormat = "icon" | "text" | "iconThenText" | "textThenIcon";
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-indigo-600 text-white hover:bg-indigo-700',
+  primary:
+    "bg-[#5b4eff] text-white hover:bg-[#4a3dee] shadow-[0_1px_6px_rgba(91,78,255,0.35)] hover:shadow-[0_2px_12px_rgba(91,78,255,0.45)]",
   secondary:
-    'border border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900',
-  tertiary: 'bg-transparent text-gray-700 hover:bg-gray-100',
+    "border border-black/[0.1] bg-white text-gray-700 hover:bg-gray-50 hover:border-black/[0.15]",
+  tertiary:
+    "bg-transparent text-gray-600 hover:bg-black/[0.05] hover:text-gray-900",
 };
 
 type ButtonProps = {
@@ -15,16 +17,16 @@ type ButtonProps = {
   text?: string;
   icon?: ReactNode;
   format?: ButtonFormat;
-} & Omit<ComponentProps<'button'>, 'children'>;
+} & Omit<ComponentProps<"button">, "children">;
 
 export const Button = ({
   variant,
-  type = 'button',
+  type = "button",
   text,
   icon,
-  format = 'text',
+  format = "text",
   disabled = false,
-  className = '',
+  className = "",
   ...rest
 }: ButtonProps) => {
   return (
@@ -32,22 +34,22 @@ export const Button = ({
       type={type}
       disabled={disabled}
       className={[
-        'focusable flex items-center gap-normal rounded-md px-normal py-small text-sm font-medium',
-        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+        "focusable flex items-center gap-normal rounded-lg px-normal py-small text-sm font-medium transition-all duration-150",
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
         variantStyles[variant],
         className,
-      ].join(' ')}
+      ].join(" ")}
       {...rest}
     >
-      {format === 'icon' && icon}
-      {format === 'text' && text}
-      {format === 'iconThenText' && (
+      {format === "icon" && icon}
+      {format === "text" && text}
+      {format === "iconThenText" && (
         <>
           {icon}
           {text}
         </>
       )}
-      {format === 'textThenIcon' && (
+      {format === "textThenIcon" && (
         <>
           {text}
           {icon}

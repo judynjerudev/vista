@@ -1,49 +1,49 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Dashboard as DashboardIcon,
   Folders as FoldersIcon,
   Group as GroupIcon,
   Home as HomeIcon,
   Settings as SettingsIcon,
-} from '@carbon/icons-react';
+} from "@carbon/icons-react";
 
-import type { NavigationItem } from './components/layout/Sidebar';
-import { Layout } from './components/layout/Layout';
-import { Dashboard } from './pages/Dashboard';
-import { Projects } from './pages/Projects';
+import type { NavigationItem } from "./components/layout/Sidebar";
+import { Layout } from "./components/layout/Layout";
+import { Dashboard } from "./pages/Dashboard";
+import { Projects } from "./pages/Projects";
 
 const navigationItems: NavigationItem[] = [
   {
-    label: 'Overview',
-    href: '/',
+    label: "Overview",
+    href: "/",
     icon: <HomeIcon size={16} />,
   },
   {
-    label: 'Projects',
-    href: '/projects',
+    label: "Projects",
+    href: "/projects",
     icon: <FoldersIcon size={16} />,
   },
   {
-    label: 'Team',
-    href: '/team',
+    label: "Team",
+    href: "/team",
     icon: <GroupIcon size={16} />,
   },
   {
-    label: 'Settings',
-    href: '/settings',
+    label: "Settings",
+    href: "/settings",
     icon: <SettingsIcon size={16} />,
   },
 ];
 
 const pageTitles: Record<string, string> = {
-  '/': 'Overview',
-  '/projects': 'Projects',
-  '/team': 'Team',
-  '/settings': 'Settings',
+  "/": "Overview",
+  "/projects": "Projects",
+  "/team": "Team",
+  "/settings": "Settings",
 };
 
 const App = () => {
-  const [currentPath, setCurrentPath] = useState('/');
+  const [currentPath, setCurrentPath] = useState("/");
 
   return (
     <Layout
@@ -55,12 +55,16 @@ const App = () => {
       })}
       onNavigate={setCurrentPath}
     >
-      {currentPath === '/' && (
-        <Dashboard onNavigateToProjects={() => setCurrentPath('/projects')} />
+      {currentPath === "/" && (
+        <Dashboard onNavigateToProjects={() => setCurrentPath("/projects")} />
       )}
-      {currentPath === '/projects' && <Projects />}
-      {currentPath === '/team' && <p className="text-gray-500">Team page coming soon.</p>}
-      {currentPath === '/settings' && <p className="text-gray-500">Settings page coming soon.</p>}
+      {currentPath === "/projects" && <Projects />}
+      {currentPath === "/team" && (
+        <p className="text-gray-500">Team page coming soon.</p>
+      )}
+      {currentPath === "/settings" && (
+        <p className="text-gray-500">Settings page coming soon.</p>
+      )}
     </Layout>
   );
 };
