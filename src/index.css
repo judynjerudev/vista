@@ -1,12 +1,28 @@
+/* ============================================================================
+   IMPORTS & BASE LAYERS
+   ============================================================================ */
+
 @import 'tailwindcss';
 
 @layer base {
   html {
-    font-size: 112.5%; /* 18px equivalent */
+    font-size: 118.75%; /* ~19px */
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 }
 
+/* ============================================================================
+   DESIGN TOKENS
+   ============================================================================ */
+
 @theme {
+  /* Spacing Scale */
   --spacing-tiny: 2px;
   --spacing-xsmall: 4px;
   --spacing-small: 8px;
@@ -14,8 +30,115 @@
   --spacing-relaxed: 24px;
   --spacing-large: 32px;
   --spacing-xlarge: 40px;
+
+  /* Component Heights */
+  --size-header-height: 64px;
+  --size-button-height: 32px;
+  --size-avatar-height: 36px;
+
+  /* Typography */
+  --font-size-xs-tiny: 9px;
+  --font-size-xs-sm: 10px;
+  --font-size-xs-lg: 11px;
+  --font-size-statistic: 41.6px;
 }
 
-@utility focusable {
-  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition;
+/* ============================================================================
+   UTILITY CLASSES - TEXT
+   ============================================================================ */
+
+@utility text-xs-tiny {
+  font-size: 9px;
 }
+
+@utility text-xs-sm {
+  font-size: 10px;
+}
+
+@utility text-xs-lg {
+  font-size: 11px;
+}
+
+@utility text-statistic {
+  font-size: 41.6px;
+}
+
+/* ============================================================================
+   UTILITY CLASSES - SPACING
+   ============================================================================ */
+
+@utility p-container {
+  padding: 28px;
+}
+
+@utility py-small {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+@utility py-xsmall {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* ============================================================================
+   UTILITY CLASSES - INTERACTION
+   ============================================================================ */
+
+@utility focusable {
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 transition;
+}
+
+/* ============================================================================
+   ANIMATIONS & KEYFRAMES
+   ============================================================================ */
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.25); }
+  50%       { box-shadow: 0 0 0 7px rgba(244, 63, 94, 0.04); }
+}
+
+@keyframes shimmer-slide {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(200%); }
+}
+
+/* ============================================================================
+   COMPONENT STYLES
+   ============================================================================ */
+
+/* Overdue Project State */
+.overdue-pulse {
+  animation: pulse-glow 2.2s ease-in-out infinite;
+}
+
+/* Dashboard Grid - Statistics Cards */
+.stats-grid > *:nth-child(1) { animation: slide-up-fade 0.35s ease-out 0.04s both; }
+.stats-grid > *:nth-child(2) { animation: slide-up-fade 0.35s ease-out 0.10s both; }
+.stats-grid > *:nth-child(3) { animation: slide-up-fade 0.35s ease-out 0.16s both; }
+.stats-grid > *:nth-child(4) { animation: slide-up-fade 0.35s ease-out 0.22s both; }
+
+/* Dashboard Grid - Overview Cards */
+.overview-grid > * { animation: slide-up-fade 0.4s ease-out 0.18s both; }

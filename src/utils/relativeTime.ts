@@ -1,10 +1,18 @@
+export const formatDate = (isoDate: string): string => {
+  return new Date(isoDate).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 export const formatRelativeTime = (isoDate: string): string => {
   const date = new Date(isoDate);
   const now = new Date();
   const elapsedMilliseconds = now.getTime() - date.getTime();
 
   if (elapsedMilliseconds < 0) {
-    return date.toLocaleDateString();
+    return formatDate(isoDate);
   }
 
   const elapsedSeconds = Math.floor(elapsedMilliseconds / 1000);
@@ -13,16 +21,16 @@ export const formatRelativeTime = (isoDate: string): string => {
   const elapsedDays = Math.floor(elapsedHours / 24);
 
   if (elapsedSeconds < 60) {
-    return 'Just now';
+    return "Just now";
   }
   if (elapsedMinutes < 60) {
-    return `${elapsedMinutes} minute${elapsedMinutes === 1 ? '' : 's'} ago`;
+    return `${elapsedMinutes} minute${elapsedMinutes === 1 ? "" : "s"} ago`;
   }
   if (elapsedHours < 24) {
-    return `${elapsedHours} hour${elapsedHours === 1 ? '' : 's'} ago`;
+    return `${elapsedHours} hour${elapsedHours === 1 ? "" : "s"} ago`;
   }
   if (elapsedDays < 7) {
-    return `${elapsedDays} day${elapsedDays === 1 ? '' : 's'} ago`;
+    return `${elapsedDays} day${elapsedDays === 1 ? "" : "s"} ago`;
   }
-  return date.toLocaleDateString();
+  return formatDate(isoDate);
 };

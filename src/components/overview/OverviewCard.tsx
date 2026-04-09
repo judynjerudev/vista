@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import { ArrowRight as ArrowRightIcon } from '@carbon/icons-react';
-import { Button } from '../layout/Button';
+import type { ReactNode } from "react";
+import { ArrowRight as ArrowRightIcon } from "@carbon/icons-react";
+import { Button } from "../layout/Button";
 
 type OverviewCardProps = {
   title: string;
@@ -8,18 +8,30 @@ type OverviewCardProps = {
   onViewAll?: () => void;
 };
 
-export const OverviewCard = ({ title, children, onViewAll }: OverviewCardProps) => {
+export const OverviewCard = ({
+  title,
+  children,
+  onViewAll,
+}: OverviewCardProps) => {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-relaxed">
-      <div className="mb-normal flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+    <div className="rounded-2xl border border-[#eae5dc] bg-white p-7 shadow-[0_2px_18px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(0,0,0,0.09)]">
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-small">
+          <span
+            className="h-1.5 w-1.5 rounded-full bg-amber-400"
+            aria-hidden="true"
+          />
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
+            {title}
+          </h3>
+        </div>
         {onViewAll && (
           <Button
             variant="tertiary"
             text="View all"
             format="textThenIcon"
-            icon={<ArrowRightIcon size={16} />}
-            className="text-sm text-indigo-600 hover:text-indigo-700"
+            icon={<ArrowRightIcon size={14} />}
+            className="gap-xsmall px-small py-xsmall text-xs text-gray-400 hover:bg-gray-100 hover:text-gray-700"
             onClick={onViewAll}
           />
         )}

@@ -22,11 +22,11 @@ export const Layout = ({
   onNavigate,
 }: LayoutProps) => {
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-[#0e0e11]">
       <Sidebar title={sidebarTitle} logo={sidebarLogo} items={navigationItems} onNavigate={onNavigate} />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-y-hidden rounded-l-2xl bg-[#f5f4ef]">
         <Header title={title} />
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-relaxed">{children}</main>
+        <main className="flex-1 overflow-auto p-relaxed">{children}</main>
       </div>
     </div>
   );
