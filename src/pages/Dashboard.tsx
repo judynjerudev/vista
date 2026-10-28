@@ -1,5 +1,3 @@
-import type { Project } from "@shared/projects/model";
-
 import type { DueProject } from "../components/overview/DueSoonCard";
 import { DueSoonCard } from "../components/overview/DueSoonCard";
 import { PriorityBreakdownCard } from "../components/overview/PriorityBreakdownCard";
@@ -8,8 +6,8 @@ import { StatisticsCard } from "../components/overview/StatisticsCard";
 import { StatusDistributionCard } from "../components/overview/StatusDistributionCard";
 import { ProjectForm } from "../components/project/ProjectForm";
 import { ProjectsTable } from "../components/project/ProjectsTable";
-import { useProjectForm } from "../hooks/useProjectForm";
-import { useProjects } from "../hooks/useProjects";
+import type { Project } from "@/features/projects";
+import { useProjectForm, useProjects } from "@/features/projects";
 
 type DashboardProps = {
   onNavigateToProjects?: () => void;

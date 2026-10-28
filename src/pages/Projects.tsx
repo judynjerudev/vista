@@ -1,10 +1,8 @@
-import type { Project } from "@shared/projects/model";
-
 import { Button } from "@/components/ui/Button";
 import { ProjectForm } from "../components/project/ProjectForm";
 import { ProjectsTable } from "../components/project/ProjectsTable";
-import { useProjectForm } from "../hooks/useProjectForm";
-import { useProjects } from "../hooks/useProjects";
+import type { Project } from "@/features/projects";
+import { useProjectForm, useProjects } from "@/features/projects";
 
 export const Projects = () => {
   const {
