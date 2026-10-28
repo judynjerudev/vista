@@ -7,10 +7,10 @@ import type {
   ProjectStatus,
 } from "@shared/projects/model";
 
-import { Button } from "../layout/Button";
-import { Input } from "../layout/Input";
-import { Select } from "../layout/Select";
-import { Textarea } from "../layout/Textarea";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Textarea } from "@/components/ui/Textarea";
 
 export type ProjectFormData = {
   name: string;

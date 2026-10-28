@@ -4,7 +4,7 @@ import { Edit as EditIcon, TrashCan as TrashIcon } from "@carbon/icons-react";
 
 import { Badge } from "./Badge";
 import { statusBadgeVariant } from "./statusBadgeVariant";
-import { Button } from "../layout/Button";
+import { Button } from "@/components/ui/Button";
 import { formatDate } from "../../utils/relativeTime";
 
 type ProjectsTableProps = {
