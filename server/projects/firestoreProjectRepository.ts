@@ -53,23 +53,20 @@ export const createFirestoreProjectRepository = (
       return toProject(snap);
     },
 
-    create: async (input) => {
-      const now = new Date().toISOString();
-      const data = { ...input, createdAt: now, updatedAt: now };
+    insert: async (data) => {
       const ref = await addDoc(projectsRef, data);
       return { uuid: ref.id, ...data };
     },
 
-    update: async (uuid, input) => {
+    update: async (uuid, changes) => {
       const ref = doc(db, "projects", uuid);
       const snap = await getDoc(ref);
       if (!snap.exists()) {
         return undefined;
       }
 
-      const updates = { ...input, updatedAt: new Date().toISOString() };
-      await updateDoc(ref, updates);
-      return { ...toProject(snap), ...updates };
+      await updateDoc(ref, changes);
+      return { ...toProject(snap), ...changes };
     },
 
     remove: async (uuid) => {
