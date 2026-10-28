@@ -8,8 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"api/**/*.ts\" \"shared/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"api/**/*.ts\" \"shared/**/*.ts\""
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"api/**/*.ts\" \"server/**/*.ts\" \"shared/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"api/**/*.ts\" \"server/**/*.ts\" \"shared/**/*.ts\""
   },
   "dependencies": {
     "@carbon/icons-react": "^11.76.0",
