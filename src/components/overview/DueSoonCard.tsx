@@ -3,7 +3,7 @@ import type { Project } from "@shared/projects/model";
 import { Badge } from "../project/Badge";
 import { OverviewCard } from "./OverviewCard";
 import { statusBadgeVariant } from "../project/statusBadgeVariant";
-import { formatDate } from "../../utils/relativeTime";
+import { formatDate } from "@/lib/date";
 
 export type DueProject = {
   project: Project & { dueDate: string };

@@ -1,7 +1,7 @@
 import type { Project, ProjectStatus } from "@shared/projects/model";
 
 import { OverviewCard } from "./OverviewCard";
-import { formatDate } from "../../utils/relativeTime";
+import { formatDate } from "@/lib/date";
 
 type RecentlyUpdatedCardProps = {
   projects: Project[];
