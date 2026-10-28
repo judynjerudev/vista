@@ -1,8 +1,8 @@
 import type { Project } from "@shared/projects/model";
 
-import { Badge } from "../project/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { OverviewCard } from "./OverviewCard";
-import { statusBadgeVariant } from "../project/statusBadgeVariant";
+import { statusBadgeVariant } from "../components/statusBadgeVariant";
 import { formatDate } from "@/lib/date";
 
 export type DueProject = {
