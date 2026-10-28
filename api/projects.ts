@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { findAll, create } from "./lib/store.js";
-import { validate } from "./utils/validate.js";
-import { sendError } from "./lib/errors.js";
+import { findAll, create } from "../server/projects/store.js";
+import { validate } from "../server/http/validate.js";
+import { sendError } from "../server/http/errors.js";
 import {
   createProjectSchema,
   projectFiltersSchema,

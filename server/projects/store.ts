@@ -15,7 +15,7 @@ import type {
   UpdateProjectRequest,
   ProjectFilters,
 } from "../../shared/projects/contracts.js";
-import { db } from "./firebase.js";
+import { db } from "../firebase.js";
 
 const projectsRef = collection(db, "projects");
 
