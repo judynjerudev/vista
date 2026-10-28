@@ -1,73 +1,67 @@
-# React + TypeScript + Vite
+# Vista
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A project dashboard built with React, Vite and Tailwind, backed by Vercel serverless functions and Firestore.
 
-Currently, two official plugins are available:
+## Getting started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+vercel dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+`vercel dev` serves the app and the `/api` functions together. Firebase settings are read from `.env` (`FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID`, …).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Script               | What it does                             |
+| -------------------- | ---------------------------------------- |
+| `npm run build`      | Type-check and build the browser app     |
+| `npm run lint`       | Lint, including the layer boundary rules |
+| `npm test`           | Run the unit tests once                  |
+| `npm run test:watch` | Run the unit tests in watch mode         |
+| `npm run format`     | Format the codebase with Prettier        |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Architecture
+
+The code is split into layers. Each layer only calls the layer below it.
+
 ```
+src/            Browser app
+  pages/          Screens; compose features
+  features/       One folder per domain (e.g. projects/)
+  components/     ui/ (generic primitives), layout/ (app shell)
+  lib/            Generic helpers (fetch client, dates)
+        │
+        │ HTTP / JSON
+        ▼
+api/            Vercel routes: parse request → call service → send response
+server/         Server internals (not deployed as endpoints)
+  http/           Errors, validation, method router
+  projects/       Service (business rules) and repository (Firestore)
+        │
+        ▼
+    Firestore
+
+shared/         Contracts used by both sides: domain model and request schemas
+```
+
+### The project layers
+
+- **`shared/projects/model.ts`**: the `Project` domain model and its enums.
+- **`shared/projects/contracts.ts`**: zod schemas and DTO types for what clients may send (`CreateProjectRequest`, `UpdateProjectRequest`, `ProjectFilters`) and what the API returns (`ProjectResponse`).
+- **`server/projects/projectRepository.ts`**: the `ProjectRepository` interface. `firestoreProjectRepository.ts` is the only code that talks to Firestore.
+- **`server/projects/projectService.ts`**: business rules such as timestamps and not-found handling. It receives a repository, so tests can pass an in-memory one.
+- **`server/projects/index.ts`**: wires the Firestore repository into the service.
+- **`api/`**: thin route files. Every file in `api/` becomes a Vercel function, so helpers live in `server/`.
+- **`src/features/projects/`**: everything the browser app knows about projects: `api.ts` (the only place with endpoint URLs), `hooks.ts`, `selectors.ts` (pure derived data), and components. Other code imports it through `index.ts`.
+
+### Import rules
+
+These are enforced by ESLint (`no-restricted-imports`):
+
+- `src/` must not import from `api/` or `server/`. Use `@shared/*` for contracts.
+- `server/`, `api/` and `shared/` must not import from `src/`.
+- `shared/` must not import from `api/` or `server/`.
+- Outside a feature, import it through its public `index.ts` (`@/features/projects`), not its internal files.
+
+### Path aliases
+
+The browser app uses `@/` for `src/` and `@shared/` for `shared/`. Server code uses relative imports with `.js` extensions, as required by the Node ESM runtime on Vercel.
