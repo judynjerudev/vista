@@ -11,10 +11,10 @@ import {
 } from "firebase/firestore";
 import type { Project } from "../../shared/projects/model.js";
 import type {
-  CreateProjectInput,
-  UpdateProjectInput,
+  CreateProjectRequest,
+  UpdateProjectRequest,
   ProjectFilters,
-} from "./schemas.js";
+} from "../../shared/projects/contracts.js";
 import { db } from "./firebase.js";
 
 const projectsRef = collection(db, "projects");
@@ -48,7 +48,7 @@ export const findByUuid = async (
   return { uuid: snap.id, ...snap.data() } as Project;
 };
 
-export const create = async (input: CreateProjectInput): Promise<Project> => {
+export const create = async (input: CreateProjectRequest): Promise<Project> => {
   const now = new Date().toISOString();
   const data = { ...input, createdAt: now, updatedAt: now };
   const ref = await addDoc(projectsRef, data);
@@ -57,7 +57,7 @@ export const create = async (input: CreateProjectInput): Promise<Project> => {
 
 export const update = async (
   uuid: string,
-  input: UpdateProjectInput,
+  input: UpdateProjectRequest,
 ): Promise<Project | undefined> => {
   const ref = doc(db, "projects", uuid);
   const snap = await getDoc(ref);
