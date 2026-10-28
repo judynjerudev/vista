@@ -2,7 +2,7 @@ import type { Project } from "@shared/projects/model";
 
 import { Edit as EditIcon, TrashCan as TrashIcon } from "@carbon/icons-react";
 
-import { Badge } from "./Badge";
+import { Badge } from "@/components/ui/Badge";
 import { statusBadgeVariant } from "./statusBadgeVariant";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/date";

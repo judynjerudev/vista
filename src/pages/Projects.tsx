@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/Button";
-import { ProjectForm } from "../components/project/ProjectForm";
-import { ProjectsTable } from "../components/project/ProjectsTable";
 import type { Project } from "@/features/projects";
-import { useProjectForm, useProjects } from "@/features/projects";
+import {
+  ProjectForm,
+  ProjectsTable,
+  useProjectForm,
+  useProjects,
+} from "@/features/projects";
 
 export const Projects = () => {
   const {

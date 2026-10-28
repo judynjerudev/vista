@@ -1,13 +1,15 @@
-import type { DueProject } from "../components/overview/DueSoonCard";
-import { DueSoonCard } from "../components/overview/DueSoonCard";
-import { PriorityBreakdownCard } from "../components/overview/PriorityBreakdownCard";
-import { RecentlyUpdatedCard } from "../components/overview/RecentlyUpdatedCard";
-import { StatisticsCard } from "../components/overview/StatisticsCard";
-import { StatusDistributionCard } from "../components/overview/StatusDistributionCard";
-import { ProjectForm } from "../components/project/ProjectForm";
-import { ProjectsTable } from "../components/project/ProjectsTable";
-import type { Project } from "@/features/projects";
-import { useProjectForm, useProjects } from "@/features/projects";
+import type { DueProject, Project } from "@/features/projects";
+import {
+  DueSoonCard,
+  PriorityBreakdownCard,
+  ProjectForm,
+  ProjectsTable,
+  RecentlyUpdatedCard,
+  StatisticsCard,
+  StatusDistributionCard,
+  useProjectForm,
+  useProjects,
+} from "@/features/projects";
 
 type DashboardProps = {
   onNavigateToProjects?: () => void;
