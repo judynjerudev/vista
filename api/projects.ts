@@ -2,7 +2,10 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { findAll, create } from "./lib/store.js";
 import { validate } from "./utils/validate.js";
 import { sendError } from "./lib/errors.js";
-import { createProjectSchema, projectFiltersSchema } from "./lib/schemas.js";
+import {
+  createProjectSchema,
+  projectFiltersSchema,
+} from "../shared/projects/contracts.js";
 
 const handleGet = async (request: VercelRequest, response: VercelResponse) => {
   const filters = validate(projectFiltersSchema, {

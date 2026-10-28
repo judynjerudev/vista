@@ -1,9 +1,7 @@
 import { z } from "zod";
 
-import {
-  projectPriorities,
-  projectStatuses,
-} from "../../shared/projects/model.js";
+import type { Project } from "./model.js";
+import { projectPriorities, projectStatuses } from "./model.js";
 
 export const createProjectSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -21,6 +19,7 @@ export const projectFiltersSchema = z.object({
   priority: z.enum(projectPriorities).optional(),
 });
 
-export type CreateProjectInput = z.infer<typeof createProjectSchema>;
-export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
+export type CreateProjectRequest = z.infer<typeof createProjectSchema>;
+export type UpdateProjectRequest = z.infer<typeof updateProjectSchema>;
 export type ProjectFilters = z.infer<typeof projectFiltersSchema>;
+export type ProjectResponse = Project;

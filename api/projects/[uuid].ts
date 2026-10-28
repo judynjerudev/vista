@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { findByUuid, update, remove } from "../lib/store.js";
 import { validate } from "../utils/validate.js";
 import { sendError, notFound } from "../lib/errors.js";
-import { updateProjectSchema } from "../lib/schemas.js";
+import { updateProjectSchema } from "../../shared/projects/contracts.js";
 
 const handleGet = async (response: VercelResponse, uuid: string) => {
   const project = await findByUuid(uuid);
