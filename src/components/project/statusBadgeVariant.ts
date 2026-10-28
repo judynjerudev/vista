@@ -1,4 +1,4 @@
-import type { ProjectStatus } from "../../../shared/types";
+import type { ProjectStatus } from "@shared/projects/model";
 import type { BadgeVariant } from "./Badge";
 
 export const statusBadgeVariant: Record<ProjectStatus, BadgeVariant> = {

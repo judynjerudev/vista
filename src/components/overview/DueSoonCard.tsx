@@ -1,4 +1,4 @@
-import type { Project } from "../../../shared/types";
+import type { Project } from "@shared/projects/model";
 
 import { Badge } from "../project/Badge";
 import { OverviewCard } from "./OverviewCard";

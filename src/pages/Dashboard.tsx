@@ -1,4 +1,4 @@
-import type { Project } from "../../shared/types";
+import type { Project } from "@shared/projects/model";
 
 import type { DueProject } from "../components/overview/DueSoonCard";
 import { DueSoonCard } from "../components/overview/DueSoonCard";

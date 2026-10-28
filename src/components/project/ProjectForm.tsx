@@ -5,7 +5,7 @@ import type {
   Project,
   ProjectPriority,
   ProjectStatus,
-} from "../../../shared/types";
+} from "@shared/projects/model";
 
 import { Button } from "../layout/Button";
 import { Input } from "../layout/Input";

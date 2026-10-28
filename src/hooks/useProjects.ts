@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Project } from "../../shared/types";
+import type { Project } from "@shared/projects/model";
 import { api, ApiError } from "../api/client";
 import type {
   CreateProjectInput,

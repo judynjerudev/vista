@@ -1,4 +1,4 @@
-import type { Project } from "../../shared/types";
+import type { Project } from "@shared/projects/model";
 
 import { Button } from "../components/layout/Button";
 import { ProjectForm } from "../components/project/ProjectForm";

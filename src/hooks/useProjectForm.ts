@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { Project } from "../../shared/types";
+import type { Project } from "@shared/projects/model";
 
 type UseProjectForm = {
   formOpen: boolean;

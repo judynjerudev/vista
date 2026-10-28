@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-import { projectPriorities, projectStatuses } from "../../shared/types.js";
+import {
+  projectPriorities,
+  projectStatuses,
+} from "../../shared/projects/model.js";
 
 export const createProjectSchema = z.object({
   name: z.string().min(1, "Name is required"),

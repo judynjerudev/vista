@@ -1,4 +1,4 @@
-import type { Project, ProjectStatus } from "../../../shared/types";
+import type { Project, ProjectStatus } from "@shared/projects/model";
 import { OverviewCard } from "./OverviewCard";
 
 const statusOrder: ProjectStatus[] = [

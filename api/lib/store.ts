@@ -9,7 +9,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import type { Project } from "../../shared/types.js";
+import type { Project } from "../../shared/projects/model.js";
 import type {
   CreateProjectInput,
   UpdateProjectInput,
