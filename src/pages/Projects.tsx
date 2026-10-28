@@ -1,6 +1,6 @@
 import type { Project } from "@shared/projects/model";
 
-import { Button } from "../components/layout/Button";
+import { Button } from "@/components/ui/Button";
 import { ProjectForm } from "../components/project/ProjectForm";
 import { ProjectsTable } from "../components/project/ProjectsTable";
 import { useProjectForm } from "../hooks/useProjectForm";

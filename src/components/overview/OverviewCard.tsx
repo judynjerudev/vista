@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ArrowRight as ArrowRightIcon } from "@carbon/icons-react";
-import { Button } from "../layout/Button";
+import { Button } from "@/components/ui/Button";
 
 type OverviewCardProps = {
   title: string;
