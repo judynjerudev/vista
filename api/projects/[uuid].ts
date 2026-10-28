@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { findByUuid, update, remove } from "../../server/projects/store.js";
+import { projectRepository } from "../../server/projects/index.js";
 import { validate } from "../../server/http/validate.js";
 import { sendError, notFound } from "../../server/http/errors.js";
 import { updateProjectSchema } from "../../shared/projects/contracts.js";
 
 const handleGet = async (response: VercelResponse, uuid: string) => {
-  const project = await findByUuid(uuid);
+  const project = await projectRepository.findByUuid(uuid);
   if (!project) throw notFound("Project");
   return response.status(200).json(project);
 };
@@ -16,13 +16,13 @@ const handlePut = async (
   uuid: string,
 ) => {
   const input = validate(updateProjectSchema, request.body);
-  const project = await update(uuid, input);
+  const project = await projectRepository.update(uuid, input);
   if (!project) throw notFound("Project");
   return response.status(200).json(project);
 };
 
 const handleDelete = async (response: VercelResponse, uuid: string) => {
-  const deleted = await remove(uuid);
+  const deleted = await projectRepository.remove(uuid);
   if (!deleted) throw notFound("Project");
   return response.status(204).end();
 };

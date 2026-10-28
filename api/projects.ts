@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { findAll, create } from "../server/projects/store.js";
+import { projectRepository } from "../server/projects/index.js";
 import { validate } from "../server/http/validate.js";
 import { sendError } from "../server/http/errors.js";
 import {
@@ -13,13 +13,13 @@ const handleGet = async (request: VercelRequest, response: VercelResponse) => {
     priority: request.query.priority,
   });
 
-  const projects = await findAll(filters);
+  const projects = await projectRepository.findAll(filters);
   return response.status(200).json(projects);
 };
 
 const handlePost = async (request: VercelRequest, response: VercelResponse) => {
   const input = validate(createProjectSchema, request.body);
-  const project = await create(input);
+  const project = await projectRepository.create(input);
   return response.status(201).json(project);
 };
 
