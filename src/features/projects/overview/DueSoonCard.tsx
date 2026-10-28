@@ -1,14 +1,8 @@
-import type { Project } from "@shared/projects/model";
-
 import { Badge } from "@/components/ui/Badge";
+import type { DueProject } from "../selectors";
 import { OverviewCard } from "./OverviewCard";
 import { statusBadgeVariant } from "../components/statusBadgeVariant";
 import { formatDate } from "@/lib/date";
-
-export type DueProject = {
-  project: Project & { dueDate: string };
-  isOverdue: boolean;
-};
 
 type DueSoonCardProps = {
   projects: DueProject[];

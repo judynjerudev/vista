@@ -1,6 +1,9 @@
-import type { DueProject, Project } from "@/features/projects";
 import {
+  countProjectsByStatus,
   DueSoonCard,
+  getDueSoonProjects,
+  getRecentlyCreatedProjects,
+  getRecentlyUpdatedProjects,
   PriorityBreakdownCard,
   ProjectForm,
   ProjectsTable,
@@ -20,23 +23,10 @@ export const Dashboard = ({ onNavigateToProjects }: DashboardProps) => {
     useProjects();
   const { formOpen, editingProject, closeForm } = useProjectForm();
 
-  const activeCount = projects.filter((project) => {
-    return project.status === "ACTIVE";
-  }).length;
-
-  const blockedCount = projects.filter((project) => {
-    return project.status === "BLOCKED";
-  }).length;
-
-  const completedCount = projects.filter((project) => {
-    return project.status === "COMPLETED";
-  }).length;
-
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const recentProjects = projects.filter((project) => {
-    return new Date(project.createdAt).getTime() >= thirtyDaysAgo.getTime();
-  });
+  const activeCount = countProjectsByStatus(projects, "ACTIVE");
+  const blockedCount = countProjectsByStatus(projects, "BLOCKED");
+  const completedCount = countProjectsByStatus(projects, "COMPLETED");
+  const recentProjects = getRecentlyCreatedProjects(projects, 30);
 
   const dueSoonProjects = getDueSoonProjects(projects);
   const recentlyUpdatedProjects = getRecentlyUpdatedProjects(projects);
@@ -127,49 +117,4 @@ export const Dashboard = ({ onNavigateToProjects }: DashboardProps) => {
       )}
     </div>
   );
-};
-
-const millisecondsPerDay = 24 * 60 * 60 * 1000;
-
-const getDueSoonProjects = (projects: Project[]): DueProject[] => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const startOfTodayMs = today.getTime();
-  const endOfDueSoonWindowMs = startOfTodayMs + 7 * millisecondsPerDay;
-
-  return projects
-    .filter((project): project is Project & { dueDate: string } => {
-      return project.dueDate !== null && project.dueDate !== "";
-    })
-    .map((project): DueProject | null => {
-      const dueTimeMs = new Date(project.dueDate).getTime();
-      const isOverdue = dueTimeMs < startOfTodayMs;
-      const isDueSoon =
-        dueTimeMs >= startOfTodayMs && dueTimeMs <= endOfDueSoonWindowMs;
-
-      if (!isOverdue && !isDueSoon) {
-        return null;
-      }
-      return { project, isOverdue };
-    })
-    .filter((entry): entry is DueProject => entry !== null)
-    .sort((dueProjectA, dueProjectB) => {
-      return (
-        new Date(dueProjectA.project.dueDate).getTime() -
-        new Date(dueProjectB.project.dueDate).getTime()
-      );
-    })
-    .slice(0, 5);
-};
-
-const getRecentlyUpdatedProjects = (projects: Project[]): Project[] => {
-  return [...projects]
-    .sort((projectA, projectB) => {
-      return (
-        new Date(projectB.updatedAt).getTime() -
-        new Date(projectA.updatedAt).getTime()
-      );
-    })
-    .slice(0, 5);
 };

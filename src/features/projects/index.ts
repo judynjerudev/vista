@@ -10,10 +10,16 @@ export type {
 
 export { projectsApi } from "./api";
 export { useProjectForm, useProjects } from "./hooks";
+export type { DueProject } from "./selectors";
+export {
+  countProjectsByStatus,
+  getDueSoonProjects,
+  getRecentlyCreatedProjects,
+  getRecentlyUpdatedProjects,
+} from "./selectors";
 
 export { ProjectForm } from "./components/ProjectForm";
 export { ProjectsTable } from "./components/ProjectsTable";
-export type { DueProject } from "./overview/DueSoonCard";
 export { DueSoonCard } from "./overview/DueSoonCard";
 export { PriorityBreakdownCard } from "./overview/PriorityBreakdownCard";
 export { RecentlyUpdatedCard } from "./overview/RecentlyUpdatedCard";
