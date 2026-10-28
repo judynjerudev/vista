@@ -1,4 +1,4 @@
-import type { Project, ProjectPriority } from "../../../shared/types";
+import type { Project, ProjectPriority } from "@shared/projects/model";
 import { OverviewCard } from "./OverviewCard";
 
 const priorityOrder: ProjectPriority[] = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];

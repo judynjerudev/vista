@@ -1,4 +1,4 @@
-import type { Project } from "../../../shared/types";
+import type { Project } from "@shared/projects/model";
 
 import { Edit as EditIcon, TrashCan as TrashIcon } from "@carbon/icons-react";
 
