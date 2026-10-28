@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { projectService } from "../server/projects/index.js";
+
+import { methodRouter } from "../server/http/handler.js";
 import { validate } from "../server/http/validate.js";
-import { sendError } from "../server/http/errors.js";
+import { projectService } from "../server/projects/index.js";
 import {
   createProjectSchema,
   projectFiltersSchema,
@@ -23,16 +24,4 @@ const handlePost = async (request: VercelRequest, response: VercelResponse) => {
   return response.status(201).json(project);
 };
 
-const handler = async (request: VercelRequest, response: VercelResponse) => {
-  try {
-    if (request.method === "GET") return await handleGet(request, response);
-    if (request.method === "POST") return await handlePost(request, response);
-
-    response.setHeader("Allow", "GET, POST");
-    return response.status(405).json({ error: "Method not allowed" });
-  } catch (error) {
-    return sendError(response, error);
-  }
-};
-
-export default handler;
+export default methodRouter({ GET: handleGet, POST: handlePost });
