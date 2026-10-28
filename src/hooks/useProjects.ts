@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Project } from "@shared/projects/model";
-import { api, ApiError } from "../api/client";
+import { ApiError, http } from "@/lib/http";
 import type {
   CreateProjectRequest,
   UpdateProjectRequest,
@@ -25,7 +25,7 @@ export const useProjects = (): UseProjects => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api<Project[]>("/api/projects");
+      const data = await http<Project[]>("/api/projects");
       setProjects(data);
     } catch (err) {
       const message =
@@ -37,7 +37,7 @@ export const useProjects = (): UseProjects => {
   };
 
   const createProject = async (input: CreateProjectRequest) => {
-    const newProject = await api<Project>("/api/projects", {
+    const newProject = await http<Project>("/api/projects", {
       method: "POST",
       body: JSON.stringify(input),
     });
@@ -45,7 +45,7 @@ export const useProjects = (): UseProjects => {
   };
 
   const updateProject = async (uuid: string, input: UpdateProjectRequest) => {
-    const editedProject = await api<Project>(`/api/projects/${uuid}`, {
+    const editedProject = await http<Project>(`/api/projects/${uuid}`, {
       method: "PUT",
       body: JSON.stringify(input),
     });
@@ -55,7 +55,7 @@ export const useProjects = (): UseProjects => {
   };
 
   const deleteProject = async (uuid: string) => {
-    await api<void>(`/api/projects/${uuid}`, { method: "DELETE" });
+    await http<void>(`/api/projects/${uuid}`, { method: "DELETE" });
     setProjects((prev) => prev.filter((project) => project.uuid !== uuid));
   };
 
