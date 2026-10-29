@@ -13,12 +13,19 @@ const createInMemoryProjectRepository = (
   const projects = [...seed];
   let nextId = 1;
 
+  const findOwnedIndex = (uuid: string, ownerUuid: string): number => {
+    return projects.findIndex((project) => {
+      return project.uuid === uuid && project.ownerUuid === ownerUuid;
+    });
+  };
+
   return {
     projects,
 
-    findAll: async (filters) => {
+    findAll: async (ownerUuid, filters) => {
       return projects.filter((project) => {
         return (
+          project.ownerUuid === ownerUuid &&
           (!filters?.status || project.status === filters.status) &&
           (!filters?.priority || project.priority === filters.priority)
         );
@@ -37,10 +44,8 @@ const createInMemoryProjectRepository = (
       return project;
     },
 
-    update: async (uuid, changes) => {
-      const index = projects.findIndex((project) => {
-        return project.uuid === uuid;
-      });
+    update: async (uuid, ownerUuid, changes) => {
+      const index = findOwnedIndex(uuid, ownerUuid);
       if (index === -1) {
         return undefined;
       }
@@ -48,10 +53,8 @@ const createInMemoryProjectRepository = (
       return projects[index];
     },
 
-    remove: async (uuid) => {
-      const index = projects.findIndex((project) => {
-        return project.uuid === uuid;
-      });
+    remove: async (uuid, ownerUuid) => {
+      const index = findOwnedIndex(uuid, ownerUuid);
       if (index === -1) {
         return false;
       }
@@ -64,13 +67,16 @@ const createInMemoryProjectRepository = (
 const createdAt = "2026-01-01T00:00:00.000Z";
 const now = "2026-03-15T12:00:00.000Z";
 
+const owner: AuthUser = { uid: "owner-1", email: "owner@example.com" };
+const stranger: AuthUser = { uid: "owner-2", email: "stranger@example.com" };
+
 const existingProject: Project = {
   uuid: "existing",
   name: "Existing",
   description: "Already stored",
   status: "ACTIVE",
   priority: "HIGH",
-  ownerUuid: "owner-1",
+  ownerUuid: owner.uid,
   dueDate: null,
   createdAt,
   updatedAt: createdAt,
@@ -83,8 +89,6 @@ const createRequest: CreateProjectRequest = {
   priority: "LOW",
   dueDate: null,
 };
-
-const actor: AuthUser = { uid: "owner-2", email: "owner@example.com" };
 
 const expectNotFound = async (promise: Promise<unknown>) => {
   await expect(promise).rejects.toBeInstanceOf(AppError);
@@ -101,7 +105,7 @@ describe("projectService", () => {
     vi.useRealTimers();
   });
 
-  it("lists projects matching the filters", async () => {
+  it("lists the user's projects matching the filters", async () => {
     const backlogProject = {
       ...existingProject,
       uuid: "backlog",
@@ -111,37 +115,53 @@ describe("projectService", () => {
       createInMemoryProjectRepository([existingProject, backlogProject]),
     );
 
-    expect(await service.list({ status: "BACKLOG" })).toEqual([backlogProject]);
+    expect(await service.list(owner, { status: "BACKLOG" })).toEqual([
+      backlogProject,
+    ]);
+  });
+
+  it("lists only the user's own projects", async () => {
+    const strangersProject = {
+      ...existingProject,
+      uuid: "strangers",
+      ownerUuid: stranger.uid,
+    };
+    const service = createProjectService(
+      createInMemoryProjectRepository([existingProject, strangersProject]),
+    );
+
+    expect(await service.list(owner)).toEqual([existingProject]);
+    expect(await service.list(stranger)).toEqual([strangersProject]);
   });
 
   it("sets the owner and both timestamps when creating a project", async () => {
     const repository = createInMemoryProjectRepository();
     const service = createProjectService(repository);
 
-    const project = await service.create(actor, createRequest);
+    const project = await service.create(owner, createRequest);
 
     expect(project).toEqual({
       uuid: "project-1",
       ...createRequest,
-      ownerUuid: "owner-2",
+      ownerUuid: owner.uid,
       createdAt: now,
       updatedAt: now,
     });
     expect(repository.projects).toHaveLength(1);
   });
 
-  it("returns an existing project", async () => {
+  it("returns the user's own project", async () => {
     const service = createProjectService(
       createInMemoryProjectRepository([existingProject]),
     );
 
-    expect(await service.get("existing")).toEqual(existingProject);
+    expect(await service.get(owner, "existing")).toEqual(existingProject);
   });
 
   it("throws not found when getting a missing project", async () => {
     const service = createProjectService(createInMemoryProjectRepository());
 
-    await expectNotFound(service.get("missing"));
+    await expectNotFound(service.get(owner, "missing"));
   });
 
   it("bumps `updatedAt` and keeps `createdAt` when updating", async () => {
@@ -149,7 +169,9 @@ describe("projectService", () => {
       createInMemoryProjectRepository([existingProject]),
     );
 
-    const project = await service.update("existing", { name: "Renamed" });
+    const project = await service.update(owner, "existing", {
+      name: "Renamed",
+    });
 
     expect(project).toEqual({
       ...existingProject,
@@ -161,14 +183,14 @@ describe("projectService", () => {
   it("throws not found when updating a missing project", async () => {
     const service = createProjectService(createInMemoryProjectRepository());
 
-    await expectNotFound(service.update("missing", { name: "Renamed" }));
+    await expectNotFound(service.update(owner, "missing", { name: "Renamed" }));
   });
 
-  it("removes an existing project", async () => {
+  it("removes the user's own project", async () => {
     const repository = createInMemoryProjectRepository([existingProject]);
     const service = createProjectService(repository);
 
-    await service.remove("existing");
+    await service.remove(owner, "existing");
 
     expect(repository.projects).toEqual([]);
   });
@@ -176,6 +198,34 @@ describe("projectService", () => {
   it("throws not found when removing a missing project", async () => {
     const service = createProjectService(createInMemoryProjectRepository());
 
-    await expectNotFound(service.remove("missing"));
+    await expectNotFound(service.remove(owner, "missing"));
+  });
+
+  describe("another user's project", () => {
+    it("can't be read", async () => {
+      const service = createProjectService(
+        createInMemoryProjectRepository([existingProject]),
+      );
+
+      await expectNotFound(service.get(stranger, "existing"));
+    });
+
+    it("can't be updated", async () => {
+      const repository = createInMemoryProjectRepository([existingProject]);
+      const service = createProjectService(repository);
+
+      await expectNotFound(
+        service.update(stranger, "existing", { name: "Taken over" }),
+      );
+      expect(repository.projects).toEqual([existingProject]);
+    });
+
+    it("can't be removed", async () => {
+      const repository = createInMemoryProjectRepository([existingProject]);
+      const service = createProjectService(repository);
+
+      await expectNotFound(service.remove(stranger, "existing"));
+      expect(repository.projects).toEqual([existingProject]);
+    });
   });
 });
