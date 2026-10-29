@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError, http } from "./http";
+import {
+  ApiError,
+  http,
+  setTokenProvider,
+  setUnauthorizedHandler,
+} from "./http";
 
 const respondWith = (response: Response) => {
   vi.stubGlobal(
@@ -23,6 +28,10 @@ const requestError = async (): Promise<ApiError> => {
 describe("http", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    setTokenProvider(async () => {
+      return null;
+    });
+    setUnauthorizedHandler(() => {});
   });
 
   it("returns the parsed JSON body", async () => {
@@ -72,5 +81,74 @@ describe("http", () => {
       details: [],
       requestId: null,
     });
+  });
+
+  it("sends the signed-in user's ID token", async () => {
+    respondWith(Response.json([]));
+    setTokenProvider(async () => {
+      return "id-token";
+    });
+
+    await http("/api/projects", { method: "POST", body: "{}" });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0];
+    const headers = new Headers(init?.headers);
+    expect(headers.get("Authorization")).toBe("Bearer id-token");
+    expect(headers.get("Content-Type")).toBe("application/json");
+    expect(init?.method).toBe("POST");
+  });
+
+  it("sends no Authorization header when signed out", async () => {
+    respondWith(Response.json([]));
+
+    await http("/api/projects");
+
+    const [, init] = vi.mocked(fetch).mock.calls[0];
+    expect(new Headers(init?.headers).has("Authorization")).toBe(false);
+  });
+
+  it("stops sending the token once the provider is unregistered", async () => {
+    respondWith(Response.json([]));
+    const unregister = setTokenProvider(async () => {
+      return "id-token";
+    });
+
+    unregister();
+    await http("/api/projects");
+
+    const [, init] = vi.mocked(fetch).mock.calls[0];
+    expect(new Headers(init?.headers).has("Authorization")).toBe(false);
+  });
+
+  it("keeps a newer provider when an older one is unregistered", async () => {
+    respondWith(Response.json([]));
+    const unregisterOlder = setTokenProvider(async () => {
+      return "older-token";
+    });
+    setTokenProvider(async () => {
+      return "newer-token";
+    });
+
+    unregisterOlder();
+    await http("/api/projects");
+
+    const [, init] = vi.mocked(fetch).mock.calls[0];
+    expect(new Headers(init?.headers).get("Authorization")).toBe(
+      "Bearer newer-token",
+    );
+  });
+
+  it("reports an unauthenticated response to the auth feature", async () => {
+    const onUnauthorized = vi.fn();
+    setUnauthorizedHandler(onUnauthorized);
+    respondWith(
+      Response.json(
+        { error: { code: "UNAUTHENTICATED", message: "Sign in required" } },
+        { status: 401 },
+      ),
+    );
+
+    await expect(http("/api/projects")).rejects.toBeInstanceOf(ApiError);
+    expect(onUnauthorized).toHaveBeenCalledOnce();
   });
 });

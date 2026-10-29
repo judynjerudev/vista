@@ -46,17 +46,56 @@ const toApiError = async (response: Response): Promise<ApiError> => {
   );
 };
 
+type TokenProvider = () => Promise<string | null>;
+
+const noToken: TokenProvider = async () => {
+  return null;
+};
+const ignoreUnauthorized = (): void => {};
+
+let getToken = noToken;
+let onUnauthorized = ignoreUnauthorized;
+
+// Registered by the auth feature, so `lib/` never imports a feature. Each
+// returns a function that unregisters it, unless something newer replaced it.
+export const setTokenProvider = (provider: TokenProvider): (() => void) => {
+  getToken = provider;
+  return () => {
+    if (getToken === provider) {
+      getToken = noToken;
+    }
+  };
+};
+
+export const setUnauthorizedHandler = (handler: () => void): (() => void) => {
+  onUnauthorized = handler;
+  return () => {
+    if (onUnauthorized === handler) {
+      onUnauthorized = ignoreUnauthorized;
+    }
+  };
+};
+
 export const http = async <T>(
   path: string,
   options?: RequestInit,
 ): Promise<T> => {
-  const response = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
+  const headers = new Headers(options?.headers);
+  headers.set("Content-Type", "application/json");
+
+  const token = await getToken();
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const response = await fetch(path, { ...options, headers });
 
   if (!response.ok) {
-    throw await toApiError(response);
+    const error = await toApiError(response);
+    if (error.code === "UNAUTHENTICATED") {
+      onUnauthorized();
+    }
+    throw error;
   }
 
   if (response.status === 204) {
