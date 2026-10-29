@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Header } from "./Header";
+import type { HeaderUser } from "./Header";
 import { Sidebar } from "./Sidebar";
 import type { NavigationItem } from "./Sidebar";
 
@@ -11,6 +12,8 @@ type LayoutProps = {
   sidebarLogo: ReactNode;
   navigationItems: NavigationItem[];
   onNavigate: (href: string) => void;
+  user: HeaderUser;
+  onSignOut: () => Promise<void>;
 };
 
 export const Layout = ({
@@ -20,6 +23,8 @@ export const Layout = ({
   sidebarLogo,
   navigationItems,
   onNavigate,
+  user,
+  onSignOut,
 }: LayoutProps) => {
   return (
     <div className="flex h-screen bg-[#0e0e11]">
@@ -30,7 +35,7 @@ export const Layout = ({
         onNavigate={onNavigate}
       />
       <div className="flex flex-1 flex-col overflow-y-hidden rounded-l-2xl bg-[#f5f4ef]">
-        <Header title={title} />
+        <Header title={title} user={user} onSignOut={onSignOut} />
         <main className="flex-1 overflow-auto p-relaxed">{children}</main>
       </div>
     </div>

@@ -9,6 +9,7 @@ import {
 
 import type { NavigationItem } from "./components/layout/Sidebar";
 import { Layout } from "./components/layout/Layout";
+import { SignInScreen, useAuth } from "./features/auth";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 
@@ -43,10 +44,25 @@ const pageTitles: Record<string, string> = {
 };
 
 const App = () => {
+  const auth = useAuth();
   const [currentPath, setCurrentPath] = useState("/");
+
+  if (auth.status === "loading") {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#f5f4ef] text-sm text-gray-500">
+        Loading...
+      </div>
+    );
+  }
+
+  if (auth.status === "signedOut") {
+    return <SignInScreen />;
+  }
 
   return (
     <Layout
+      user={auth.user}
+      onSignOut={auth.signOut}
       title={pageTitles[currentPath]}
       sidebarTitle="Dashboard"
       sidebarLogo={<DashboardIcon size={24} className="text-indigo-600" />}
