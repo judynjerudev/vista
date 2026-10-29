@@ -12,6 +12,18 @@ const statusByCode: Record<ErrorCode, number> = {
   INTERNAL: 500,
 };
 
+export const sendJson = (
+  res: VercelResponse,
+  status: number,
+  body: unknown,
+): void => {
+  res.status(status).json(body);
+};
+
+export const sendNoContent = (res: VercelResponse): void => {
+  res.status(204).end();
+};
+
 export const sendError = (res: VercelResponse, error: unknown): void => {
   if (error instanceof AppError) {
     res.status(statusByCode[error.code]).json({ error: error.message });

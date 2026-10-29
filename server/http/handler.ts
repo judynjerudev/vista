@@ -1,13 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { sendError } from "./errors.js";
+import { AppError } from "../errors.js";
+import { sendError } from "./responses.js";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export type RouteHandler = (
   request: VercelRequest,
   response: VercelResponse,
-) => Promise<unknown>;
+) => Promise<void>;
 
 export const methodRouter = (
   handlers: Partial<Record<HttpMethod, RouteHandler>>,
@@ -20,7 +21,10 @@ export const methodRouter = (
 
     if (!handle) {
       response.setHeader("Allow", Object.keys(handlers).join(", "));
-      response.status(405).json({ error: "Method not allowed" });
+      sendError(
+        response,
+        new AppError("METHOD_NOT_ALLOWED", "Method not allowed"),
+      );
       return;
     }
 

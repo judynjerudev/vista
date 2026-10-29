@@ -1,31 +1,39 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 import { methodRouter } from "../../server/http/handler.js";
-import { validate } from "../../server/http/validate.js";
+import { getRouteParam, parseBody } from "../../server/http/request.js";
+import { sendJson, sendNoContent } from "../../server/http/responses.js";
 import { projectService } from "../../server/projects/index.js";
 import { updateProjectSchema } from "../../shared/projects/contracts.js";
 
 const getUuid = (request: VercelRequest): string => {
-  return request.query.uuid as string;
+  return getRouteParam(request, "uuid");
 };
 
-const handleGet = async (request: VercelRequest, response: VercelResponse) => {
+const handleGet = async (
+  request: VercelRequest,
+  response: VercelResponse,
+): Promise<void> => {
   const project = await projectService.get(getUuid(request));
-  return response.status(200).json(project);
+  sendJson(response, 200, project);
 };
 
-const handlePut = async (request: VercelRequest, response: VercelResponse) => {
-  const input = validate(updateProjectSchema, request.body);
-  const project = await projectService.update(getUuid(request), input);
-  return response.status(200).json(project);
+const handlePut = async (
+  request: VercelRequest,
+  response: VercelResponse,
+): Promise<void> => {
+  const uuid = getUuid(request);
+  const input = parseBody(request, updateProjectSchema);
+  const project = await projectService.update(uuid, input);
+  sendJson(response, 200, project);
 };
 
 const handleDelete = async (
   request: VercelRequest,
   response: VercelResponse,
-) => {
+): Promise<void> => {
   await projectService.remove(getUuid(request));
-  return response.status(204).end();
+  sendNoContent(response);
 };
 
 export default methodRouter({
