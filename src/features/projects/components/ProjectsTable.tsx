@@ -5,7 +5,7 @@ import { Edit as EditIcon, TrashCan as TrashIcon } from "@carbon/icons-react";
 import { Badge } from "@/components/ui/Badge";
 import { statusBadgeVariant } from "./statusBadgeVariant";
 import { Button } from "@/components/ui/Button";
-import { formatDate } from "@/lib/date";
+import { formatCalendarDate } from "@/lib/date";
 
 type ProjectsTableProps = {
   projects: Project[];
@@ -106,7 +106,7 @@ export const ProjectsTable = ({
                 </div>
               </td>
               <td className="px-relaxed py-normal text-sm text-gray-500 whitespace-nowrap">
-                {project.dueDate ? formatDate(project.dueDate) : "—"}
+                {project.dueDate ? formatCalendarDate(project.dueDate) : "—"}
               </td>
               {showActions && (
                 <td className="px-relaxed py-normal text-right">

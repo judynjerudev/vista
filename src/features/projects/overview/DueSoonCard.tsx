@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/Badge";
 import type { DueProject } from "../selectors";
 import { OverviewCard } from "./OverviewCard";
 import { statusBadgeVariant } from "../components/statusBadgeVariant";
-import { formatDate } from "@/lib/date";
+import { formatCalendarDate } from "@/lib/date";
 
 type DueSoonCardProps = {
   projects: DueProject[];
@@ -50,7 +50,7 @@ export const DueSoonCard = ({ projects, onViewAll }: DueSoonCardProps) => {
                 <p
                   className={`text-xs ${isOverdue ? "font-semibold text-rose-500" : "text-gray-400"}`}
                 >
-                  {formatDate(project.dueDate)}
+                  {formatCalendarDate(project.dueDate)}
                 </p>
               </div>
               <Badge

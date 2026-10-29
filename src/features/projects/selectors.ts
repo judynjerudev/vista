@@ -1,3 +1,4 @@
+import { parseCalendarDate, toCalendarDate } from "@shared/calendarDate";
 import type { Project, ProjectStatus } from "@shared/projects/model";
 
 export type DueProject = {
@@ -40,11 +41,13 @@ export const getDueSoonProjects = (
   const endOfDueSoonWindowMs = startOfTodayMs + 7 * millisecondsPerDay;
 
   return projects
-    .filter((project): project is Project & { dueDate: string } => {
-      return project.dueDate !== null && project.dueDate !== "";
-    })
     .map((project): DueProject | null => {
-      const dueTimeMs = new Date(project.dueDate).getTime();
+      const dueDate = toCalendarDate(project.dueDate);
+      if (!dueDate) {
+        return null;
+      }
+
+      const dueTimeMs = parseCalendarDate(dueDate).getTime();
       const isOverdue = dueTimeMs < startOfTodayMs;
       const isDueSoon =
         dueTimeMs >= startOfTodayMs && dueTimeMs <= endOfDueSoonWindowMs;
@@ -52,13 +55,13 @@ export const getDueSoonProjects = (
       if (!isOverdue && !isDueSoon) {
         return null;
       }
-      return { project, isOverdue };
+      return { project: { ...project, dueDate }, isOverdue };
     })
     .filter((entry): entry is DueProject => entry !== null)
     .sort((dueProjectA, dueProjectB) => {
       return (
-        new Date(dueProjectA.project.dueDate).getTime() -
-        new Date(dueProjectB.project.dueDate).getTime()
+        parseCalendarDate(dueProjectA.project.dueDate).getTime() -
+        parseCalendarDate(dueProjectB.project.dueDate).getTime()
       );
     })
     .slice(0, 5);

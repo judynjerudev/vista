@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type { Project } from "@shared/projects/model";
 
@@ -88,5 +88,36 @@ describe("getRecentlyUpdatedProjects", () => {
         return project.uuid;
       }),
     ).toEqual(["p5", "p4", "p3", "p2", "p1"]);
+  });
+});
+
+describe("getDueSoonProjects in a timezone behind UTC", () => {
+  beforeAll(() => {
+    vi.stubEnv("TZ", "America/Los_Angeles");
+  });
+
+  afterAll(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("treats a project due today as due soon, not overdue", () => {
+    const morning = new Date(2026, 2, 18, 9, 0);
+    const dueToday = buildProject({ uuid: "today", dueDate: "2026-03-18" });
+
+    expect(getDueSoonProjects([dueToday], morning)).toEqual([
+      { project: dueToday, isOverdue: false },
+    ]);
+  });
+
+  it("reads a timestamp due date as the calendar day written", () => {
+    const morning = new Date(2026, 2, 18, 9, 0);
+    const timestamp = buildProject({
+      uuid: "timestamp",
+      dueDate: "2026-03-18T00:00:00.000Z",
+    });
+
+    expect(getDueSoonProjects([timestamp], morning)).toEqual([
+      { project: { ...timestamp, dueDate: "2026-03-18" }, isOverdue: false },
+    ]);
   });
 });
