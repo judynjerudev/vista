@@ -13,6 +13,7 @@ import {
   projectStatuses,
 } from "../../shared/projects/model.js";
 import { AppError } from "../errors.js";
+import { logError } from "../logger.js";
 import type { ProjectRepository } from "./projectRepository.js";
 
 // What a stored document must look like. Older documents may hold a
@@ -39,9 +40,7 @@ export const toProject = (snapshot: DocumentSnapshot): Project | null => {
     const problems = result.error.issues.map((issue) => {
       return `${issue.path.join(".")}: ${issue.message}`;
     });
-    console.error(
-      `Invalid project document ${snapshot.id}: ${problems.join("; ")}`,
-    );
+    logError(`Invalid project document ${snapshot.id}: ${problems.join("; ")}`);
     return null;
   }
 
