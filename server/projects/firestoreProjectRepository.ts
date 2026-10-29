@@ -49,25 +49,32 @@ export const createFirestoreProjectRepository = (
       return { uuid: ref.id, ...data };
     },
 
-    update: async (uuid, changes) => {
-      const ref = projectsRef.doc(uuid);
-      const snap = await ref.get();
-      if (!snap.exists) {
-        return undefined;
-      }
+    // The read and the write run in one transaction, so a concurrent delete
+    // can't slip in between the existence check and the write.
+    update: (uuid, changes) => {
+      return db.runTransaction(async (transaction) => {
+        const ref = projectsRef.doc(uuid);
+        const snap = await transaction.get(ref);
+        if (!snap.exists) {
+          return undefined;
+        }
 
-      await ref.update(changes);
-      return { ...toProject(snap), ...changes };
+        transaction.update(ref, changes);
+        return { ...toProject(snap), ...changes };
+      });
     },
 
-    remove: async (uuid) => {
-      const ref = projectsRef.doc(uuid);
-      const snap = await ref.get();
-      if (!snap.exists) {
-        return false;
-      }
-      await ref.delete();
-      return true;
+    remove: (uuid) => {
+      return db.runTransaction(async (transaction) => {
+        const ref = projectsRef.doc(uuid);
+        const snap = await transaction.get(ref);
+        if (!snap.exists) {
+          return false;
+        }
+
+        transaction.delete(ref);
+        return true;
+      });
     },
   };
 };
