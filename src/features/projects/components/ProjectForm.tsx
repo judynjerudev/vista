@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { toCalendarDate } from "@shared/calendarDate";
 import type {
   Project,
   ProjectPriority,
@@ -57,7 +58,9 @@ export const ProjectForm = ({
     project?.priority ?? "MEDIUM",
   );
   const [ownerUuid, setOwnerUuid] = useState(project?.ownerUuid ?? "");
-  const [dueDate, setDueDate] = useState(project?.dueDate ?? "");
+  const [dueDate, setDueDate] = useState(
+    toCalendarDate(project?.dueDate) ?? "",
+  );
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
