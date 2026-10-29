@@ -16,6 +16,7 @@
   "dependencies": {
     "@carbon/icons-react": "^11.76.0",
     "firebase": "^12.9.0",
+    "firebase-admin": "^14.5.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zod": "^4.3.6"

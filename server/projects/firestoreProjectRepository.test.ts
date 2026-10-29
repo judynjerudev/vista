@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { DocumentSnapshot } from "firebase/firestore";
+import type { DocumentSnapshot } from "firebase-admin/firestore";
 
 import { toProject } from "./firestoreProjectRepository.js";
 

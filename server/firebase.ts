@@ -1,16 +1,25 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import type { App } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
+import { loadServerConfig } from "./config.js";
+
+// Throws on a cold start if the environment is misconfigured, naming every
+// bad variable, instead of failing later with a confusing Firestore error.
+const config = loadServerConfig(process.env);
+
+const getApp = (): App => {
+  const [existingApp] = getApps();
+  if (existingApp) {
+    return existingApp;
+  }
+
+  // Without credentials the SDK talks to the emulator in
+  // `FIRESTORE_EMULATOR_HOST`, which the config requires in that case.
+  return initializeApp({
+    projectId: config.projectId,
+    ...(config.credentials && { credential: cert(config.credentials) }),
+  });
 };
 
-const app =
-  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-
-export const db = getFirestore(app);
+export const db = getFirestore(getApp());
