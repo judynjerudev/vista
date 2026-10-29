@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DocumentSnapshot } from "firebase-admin/firestore";
 
 import { toProject } from "./firestoreProjectRepository.js";
@@ -23,6 +23,10 @@ const snapshotOf = (data: Record<string, unknown>): DocumentSnapshot => {
 };
 
 describe("toProject", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("keeps a stored calendar due date", () => {
     const project = toProject(
       snapshotOf({ ...storedProject, dueDate: "2026-03-18" }),
@@ -40,15 +44,39 @@ describe("toProject", () => {
       snapshotOf({ ...storedProject, dueDate: "2026-03-18T00:00:00.000Z" }),
     );
 
-    expect(project.dueDate).toBe("2026-03-18");
+    expect(project?.dueDate).toBe("2026-03-18");
   });
 
   it.each([null, undefined, "", "not a date"])(
     "maps a stored due date of %j to null",
     (dueDate) => {
-      expect(toProject(snapshotOf({ ...storedProject, dueDate })).dueDate).toBe(
-        null,
-      );
+      expect(
+        toProject(snapshotOf({ ...storedProject, dueDate }))?.dueDate,
+      ).toBe(null);
     },
   );
+
+  it("drops fields that aren't part of a project", () => {
+    const project = toProject(
+      snapshotOf({ ...storedProject, dueDate: null, legacyField: "x" }),
+    );
+
+    expect(project).not.toHaveProperty("legacyField");
+  });
+
+  it("returns null and logs the invalid fields without their values", () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const project = toProject(
+      snapshotOf({ ...storedProject, status: "ARCHIVED", name: undefined }),
+    );
+
+    expect(project).toBeNull();
+    expect(log).toHaveBeenCalledOnce();
+    const [message] = log.mock.calls[0] as [string];
+    expect(message).toContain("Invalid project document project-1");
+    expect(message).toContain("status:");
+    expect(message).toContain("name:");
+    expect(message).not.toContain("ARCHIVED");
+  });
 });
