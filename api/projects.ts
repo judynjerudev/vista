@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+import { authenticate } from "../server/auth/index.js";
 import { methodRouter } from "../server/http/handler.js";
 import { parseBody, parseQuery } from "../server/http/request.js";
 import { sendJson } from "../server/http/responses.js";
@@ -27,4 +28,7 @@ const handlePost = async (
   sendJson(response, 201, project);
 };
 
-export default methodRouter({ GET: handleGet, POST: handlePost });
+export default methodRouter(
+  { GET: handleGet, POST: handlePost },
+  { authenticate },
+);

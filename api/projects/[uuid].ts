@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+import { authenticate } from "../../server/auth/index.js";
 import { methodRouter } from "../../server/http/handler.js";
 import { getRouteParam, parseBody } from "../../server/http/request.js";
 import { sendJson, sendNoContent } from "../../server/http/responses.js";
@@ -36,8 +37,7 @@ const handleDelete = async (
   sendNoContent(response);
 };
 
-export default methodRouter({
-  GET: handleGet,
-  PUT: handlePut,
-  DELETE: handleDelete,
-});
+export default methodRouter(
+  { GET: handleGet, PUT: handlePut, DELETE: handleDelete },
+  { authenticate },
+);
