@@ -1,9 +1,23 @@
-export const formatDate = (isoDate: string): string => {
-  return new Date(isoDate).toLocaleDateString("en-GB", {
+import { parseCalendarDate, toCalendarDate } from "@shared/calendarDate";
+
+const formatDayMonthYear = (date: Date): string => {
+  return date.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
+};
+
+export const formatDate = (isoDate: string): string => {
+  return formatDayMonthYear(new Date(isoDate));
+};
+
+export const formatCalendarDate = (value: string): string => {
+  const calendarDate = toCalendarDate(value);
+  if (!calendarDate) {
+    return "—";
+  }
+  return formatDayMonthYear(parseCalendarDate(calendarDate));
 };
 
 export const formatRelativeTime = (isoDate: string): string => {
