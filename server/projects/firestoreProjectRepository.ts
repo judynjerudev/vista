@@ -11,11 +11,13 @@ import {
 } from "firebase/firestore";
 import type { DocumentSnapshot, Firestore } from "firebase/firestore";
 
+import { toCalendarDate } from "../../shared/calendarDate.js";
 import type { Project } from "../../shared/projects/model.js";
 import type { ProjectRepository } from "./projectRepository.js";
 
-const toProject = (snapshot: DocumentSnapshot): Project => {
-  return { uuid: snapshot.id, ...snapshot.data() } as Project;
+export const toProject = (snapshot: DocumentSnapshot): Project => {
+  const data = snapshot.data() as Omit<Project, "uuid">;
+  return { uuid: snapshot.id, ...data, dueDate: toCalendarDate(data.dueDate) };
 };
 
 export const createFirestoreProjectRepository = (
