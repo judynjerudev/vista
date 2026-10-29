@@ -1,4 +1,3 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
@@ -7,45 +6,7 @@ import { logError } from "../logger.js";
 import { methodRouter } from "./handler.js";
 import { parseBody } from "./request.js";
 import { sendJson } from "./responses.js";
-
-type RecordedResponse = {
-  statusCode: number;
-  headers: Record<string, string>;
-  body: unknown;
-};
-
-const createResponse = (): VercelResponse & RecordedResponse => {
-  const response = {
-    statusCode: 200,
-    headers: {} as Record<string, string>,
-    body: undefined as unknown,
-    setHeader: (name: string, value: string) => {
-      response.headers[name.toLowerCase()] = value;
-      return response;
-    },
-    status: (code: number) => {
-      response.statusCode = code;
-      return response;
-    },
-    json: (body: unknown) => {
-      response.body = body;
-      return response;
-    },
-    end: () => {
-      return response;
-    },
-  };
-  return response as unknown as VercelResponse & RecordedResponse;
-};
-
-const call = async (
-  router: ReturnType<typeof methodRouter>,
-  request: Partial<VercelRequest>,
-): Promise<RecordedResponse> => {
-  const response = createResponse();
-  await router({ query: {}, ...request } as VercelRequest, response);
-  return response;
-};
+import { callHandler as call } from "./testing.js";
 
 describe("methodRouter", () => {
   afterEach(() => {
