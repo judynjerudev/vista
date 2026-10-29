@@ -55,7 +55,7 @@ const App = () => {
     );
   }
 
-  if (auth.status === "signedOut") {
+  if (auth.status !== "signedIn") {
     return <SignInScreen />;
   }
 
