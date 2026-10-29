@@ -4,7 +4,7 @@ import type {
   ProjectFilters,
   UpdateProjectRequest,
 } from "../../shared/projects/contracts.js";
-import { notFound } from "../http/errors.js";
+import { notFound } from "../errors.js";
 import type { ProjectRepository } from "./projectRepository.js";
 
 export type ProjectService = {
