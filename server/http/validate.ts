@@ -1,7 +1,7 @@
 import { ZodError } from "zod";
 import type { ZodType } from "zod";
 
-import { ApiError } from "./errors.js";
+import { AppError } from "../errors.js";
 
 export const validate = <T>(schema: ZodType<T>, data: unknown): T => {
   try {
@@ -11,7 +11,7 @@ export const validate = <T>(schema: ZodType<T>, data: unknown): T => {
       const messages = error.issues.map(
         (e) => `${e.path.join(".")}: ${e.message}`,
       );
-      throw new ApiError(400, messages.join("; "));
+      throw new AppError("VALIDATION_FAILED", messages.join("; "));
     }
     throw error;
   }

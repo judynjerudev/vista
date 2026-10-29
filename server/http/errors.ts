@@ -1,21 +1,20 @@
 import type { VercelResponse } from "@vercel/node";
 
-export class ApiError extends Error {
-  constructor(
-    public statusCode: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+import type { ErrorCode } from "../../shared/http/errors.js";
+import { AppError } from "../errors.js";
 
-export const notFound = (resource: string): ApiError => {
-  return new ApiError(404, `${resource} not found`);
+const statusByCode: Record<ErrorCode, number> = {
+  VALIDATION_FAILED: 400,
+  UNAUTHENTICATED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  METHOD_NOT_ALLOWED: 405,
+  INTERNAL: 500,
 };
 
 export const sendError = (res: VercelResponse, error: unknown): void => {
-  if (error instanceof ApiError) {
-    res.status(error.statusCode).json({ error: error.message });
+  if (error instanceof AppError) {
+    res.status(statusByCode[error.code]).json({ error: error.message });
     return;
   }
 

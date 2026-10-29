@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Project } from "../../shared/projects/model.js";
 import type { CreateProjectRequest } from "../../shared/projects/contracts.js";
-import { ApiError } from "../http/errors.js";
+import { AppError } from "../errors.js";
 import type { ProjectRepository } from "./projectRepository.js";
 import { createProjectService } from "./projectService.js";
 
@@ -85,8 +85,8 @@ const createRequest: CreateProjectRequest = {
 };
 
 const expectNotFound = async (promise: Promise<unknown>) => {
-  await expect(promise).rejects.toBeInstanceOf(ApiError);
-  await expect(promise).rejects.toMatchObject({ statusCode: 404 });
+  await expect(promise).rejects.toBeInstanceOf(AppError);
+  await expect(promise).rejects.toMatchObject({ code: "NOT_FOUND" });
 };
 
 describe("projectService", () => {
