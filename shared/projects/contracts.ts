@@ -4,12 +4,13 @@ import { calendarDateSchema } from "../calendarDate.js";
 import type { Project } from "./model.js";
 import { projectPriorities, projectStatuses } from "./model.js";
 
+// The owner isn't here: the server sets it from the signed-in user, and any
+// `ownerUuid` a client sends is dropped.
 const projectFieldsSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
   status: z.enum(projectStatuses),
   priority: z.enum(projectPriorities),
-  ownerUuid: z.string().min(1, "Owner is required"),
   dueDate: calendarDateSchema.nullable(),
 });
 

@@ -64,7 +64,6 @@ const newProject: CreateProjectRequest = {
   description: "Ship the first version",
   status: "ACTIVE",
   priority: "HIGH",
-  ownerUuid: "owner-1",
   dueDate: "2026-11-20",
 };
 
@@ -119,7 +118,12 @@ describe("projects API against the Firestore emulator", () => {
 
   it("creates, reads, updates and deletes a project", async () => {
     const created = await createProject();
-    expect(created).toMatchObject({ ...newProject, uuid: expect.any(String) });
+    const { uid } = await getAuth(app).getUserByEmail("owner@example.com");
+    expect(created).toMatchObject({
+      ...newProject,
+      uuid: expect.any(String),
+      ownerUuid: uid,
+    });
 
     const fetched = await callProject(created.uuid, "GET");
     expect(fetched.statusCode).toBe(200);
@@ -187,7 +191,7 @@ describe("projects API against the Firestore emulator", () => {
     await db
       .collection("projects")
       .doc("corrupt")
-      .set({ ...newProject, status: "ARCHIVED" });
+      .set({ ...newProject, ownerUuid: valid.ownerUuid, status: "ARCHIVED" });
 
     const list = await listProjects();
     expect(list.body).toEqual([valid]);

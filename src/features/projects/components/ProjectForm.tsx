@@ -18,7 +18,6 @@ export type ProjectFormData = {
   description: string;
   status: ProjectStatus;
   priority: ProjectPriority;
-  ownerUuid: string;
   dueDate: string | null;
 };
 
@@ -57,7 +56,6 @@ export const ProjectForm = ({
   const [priority, setPriority] = useState<ProjectPriority>(
     project?.priority ?? "MEDIUM",
   );
-  const [ownerUuid, setOwnerUuid] = useState(project?.ownerUuid ?? "");
   const [dueDate, setDueDate] = useState(
     toCalendarDate(project?.dueDate) ?? "",
   );
@@ -72,7 +70,6 @@ export const ProjectForm = ({
         description,
         status,
         priority,
-        ownerUuid,
         dueDate: dueDate || null,
       });
     } finally {
@@ -140,16 +137,6 @@ export const ProjectForm = ({
           </div>
 
           <div className="grid grid-cols-2 gap-normal">
-            <Input
-              label="Owner ID"
-              id="ownerUuid"
-              type="text"
-              value={ownerUuid}
-              required
-              onChange={(event) => {
-                return setOwnerUuid(event.target.value);
-              }}
-            />
             <Input
               label="Due Date"
               id="dueDate"

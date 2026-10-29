@@ -7,7 +7,6 @@ const validRequest = {
   description: "Description",
   status: "ACTIVE",
   priority: "MEDIUM",
-  ownerUuid: "owner",
 };
 
 describe("project contracts", () => {
@@ -33,6 +32,15 @@ describe("project contracts", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("drops a client-supplied owner", () => {
+    const result = createProjectSchema.safeParse({
+      ...validRequest,
+      ownerUuid: "someone-else",
+    });
+
+    expect(result.success && result.data).not.toHaveProperty("ownerUuid");
   });
 
   it("allows clearing the due date on update", () => {

@@ -4,13 +4,14 @@ import type {
   ProjectFilters,
   UpdateProjectRequest,
 } from "../../shared/projects/contracts.js";
+import type { AuthUser } from "../auth/authenticate.js";
 import { notFound } from "../errors.js";
 import type { ProjectRepository } from "./projectRepository.js";
 
 export type ProjectService = {
   list: (filters?: ProjectFilters) => Promise<Project[]>;
   get: (uuid: string) => Promise<Project>;
-  create: (input: CreateProjectRequest) => Promise<Project>;
+  create: (actor: AuthUser, input: CreateProjectRequest) => Promise<Project>;
   update: (uuid: string, input: UpdateProjectRequest) => Promise<Project>;
   remove: (uuid: string) => Promise<void>;
 };
@@ -31,9 +32,14 @@ export const createProjectService = (
       return project;
     },
 
-    create: (input) => {
+    create: (actor, input) => {
       const now = new Date().toISOString();
-      return repository.insert({ ...input, createdAt: now, updatedAt: now });
+      return repository.insert({
+        ...input,
+        ownerUuid: actor.uid,
+        createdAt: now,
+        updatedAt: now,
+      });
     },
 
     update: async (uuid, input) => {
