@@ -1,16 +1,17 @@
 import type { VercelRequest } from "@vercel/node";
 import type { ZodType } from "zod";
 
-import { AppError } from "../errors.js";
+import { validationFailed } from "../errors.js";
 
 const parse = <T>(schema: ZodType<T>, data: unknown): T => {
   const result = schema.safeParse(data);
 
   if (!result.success) {
-    const messages = result.error.issues.map((issue) => {
-      return `${issue.path.join(".")}: ${issue.message}`;
-    });
-    throw new AppError("VALIDATION_FAILED", messages.join("; "));
+    throw validationFailed(
+      result.error.issues.map((issue) => {
+        return { path: issue.path.join("."), message: issue.message };
+      }),
+    );
   }
   return result.data;
 };
@@ -30,13 +31,10 @@ export const parseQuery = <T>(
   });
 
   if (repeated.length > 0) {
-    throw new AppError(
-      "VALIDATION_FAILED",
-      repeated
-        .map((name) => {
-          return `${name}: Must be given at most once`;
-        })
-        .join("; "),
+    throw validationFailed(
+      repeated.map((name) => {
+        return { path: name, message: "Must be given at most once" };
+      }),
     );
   }
   return parse(schema, request.query);
@@ -57,7 +55,7 @@ export const getRouteParam = (request: VercelRequest, name: string): string => {
     value === "." ||
     value === ".."
   ) {
-    throw new AppError("VALIDATION_FAILED", `${name}: Invalid value`);
+    throw validationFailed([{ path: name, message: "Invalid value" }]);
   }
   return value;
 };
