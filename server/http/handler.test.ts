@@ -1,12 +1,21 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-import { notFound } from "../errors.js";
+import type { AuthUser } from "../auth/authenticate.js";
+import { AppError, notFound } from "../errors.js";
 import { logError } from "../logger.js";
 import { methodRouter } from "./handler.js";
 import { parseBody } from "./request.js";
 import { sendJson } from "./responses.js";
 import { callHandler as call } from "./testing.js";
+
+const signedInUser: AuthUser = { uid: "user-1", email: "user@example.com" };
+
+const options = {
+  authenticate: async (): Promise<AuthUser> => {
+    return signedInUser;
+  },
+};
 
 describe("methodRouter", () => {
   afterEach(() => {
@@ -14,11 +23,14 @@ describe("methodRouter", () => {
   });
 
   it("runs the handler for the method and tags the response with a request ID", async () => {
-    const router = methodRouter({
-      GET: async (_, response) => {
-        sendJson(response, 200, { ok: true });
+    const router = methodRouter(
+      {
+        GET: async (_, response) => {
+          sendJson(response, 200, { ok: true });
+        },
       },
-    });
+      options,
+    );
 
     const response = await call(router, { method: "GET" });
 
@@ -28,7 +40,7 @@ describe("methodRouter", () => {
   });
 
   it("rejects an unsupported method with the allowed ones", async () => {
-    const router = methodRouter({ GET: vi.fn(), POST: vi.fn() });
+    const router = methodRouter({ GET: vi.fn(), POST: vi.fn() }, options);
 
     const response = await call(router, { method: "PATCH" });
 
@@ -40,11 +52,14 @@ describe("methodRouter", () => {
   });
 
   it("returns validation errors with per-field details", async () => {
-    const router = methodRouter({
-      POST: async (request) => {
-        parseBody(request, z.object({ name: z.string().min(1, "Required") }));
+    const router = methodRouter(
+      {
+        POST: async (request) => {
+          parseBody(request, z.object({ name: z.string().min(1, "Required") }));
+        },
       },
-    });
+      options,
+    );
 
     const response = await call(router, { method: "POST", body: { name: "" } });
 
@@ -59,11 +74,14 @@ describe("methodRouter", () => {
   });
 
   it("maps domain errors to their status code", async () => {
-    const router = methodRouter({
-      GET: async () => {
-        throw notFound("Project");
+    const router = methodRouter(
+      {
+        GET: async () => {
+          throw notFound("Project");
+        },
       },
-    });
+      options,
+    );
 
     const response = await call(router, { method: "GET" });
 
@@ -75,12 +93,15 @@ describe("methodRouter", () => {
 
   it("hides unexpected errors and logs them with the request ID", async () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
-    const router = methodRouter({
-      GET: async () => {
-        logError("Looking something up");
-        throw new Error("database password is wrong");
+    const router = methodRouter(
+      {
+        GET: async () => {
+          logError("Looking something up");
+          throw new Error("database password is wrong");
+        },
       },
-    });
+      options,
+    );
 
     const response = await call(router, { method: "GET" });
     const requestId = response.headers["x-request-id"];
@@ -98,5 +119,38 @@ describe("methodRouter", () => {
       `[request ${requestId}] Unhandled error:`,
       expect.any(Error),
     );
+  });
+
+  it("passes the signed-in user and request ID to the handler", async () => {
+    const handler = vi.fn(async () => {});
+    const router = methodRouter({ GET: handler }, options);
+
+    const response = await call(router, { method: "GET" });
+
+    expect(handler).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
+      requestId: response.headers["x-request-id"],
+      user: signedInUser,
+    });
+  });
+
+  it("rejects an unauthenticated request before running the handler", async () => {
+    const handler = vi.fn(async () => {});
+    const router = methodRouter(
+      { GET: handler },
+      {
+        authenticate: async () => {
+          throw new AppError("UNAUTHENTICATED", "Sign in required");
+        },
+      },
+    );
+
+    const response = await call(router, { method: "GET" });
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(401);
+    expect(response.headers["www-authenticate"]).toBe("Bearer");
+    expect(response.body).toEqual({
+      error: { code: "UNAUTHENTICATED", message: "Sign in required" },
+    });
   });
 });

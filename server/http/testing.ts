@@ -38,6 +38,9 @@ export const callHandler = async (
   request: Partial<VercelRequest>,
 ): Promise<RecordedResponse> => {
   const response = createResponse();
-  await handler({ query: {}, ...request } as VercelRequest, response);
+  await handler(
+    { query: {}, headers: {}, ...request } as VercelRequest,
+    response,
+  );
   return response;
 };

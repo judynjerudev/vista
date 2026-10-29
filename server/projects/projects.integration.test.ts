@@ -1,14 +1,25 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getAuth } from "firebase-admin/auth";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import projectHandler from "../../api/projects/[uuid].js";
 import projectsHandler from "../../api/projects.js";
 import type { CreateProjectRequest } from "../../shared/projects/contracts.js";
 import type { Project } from "../../shared/projects/model.js";
-import { db } from "../firebase.js";
+import { app, db } from "../firebase.js";
 import { callHandler } from "../http/testing.js";
 
+const projectId = process.env.FIREBASE_PROJECT_ID;
 const emulatorUrl = `http://${process.env.FIRESTORE_EMULATOR_HOST}`;
-const documentsPath = `projects/${process.env.FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+const authEmulatorUrl = `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}`;
+const documentsPath = `projects/${projectId}/databases/(default)/documents`;
 
 const clearDatabase = async (): Promise<void> => {
   const response = await fetch(`${emulatorUrl}/emulator/v1/${documentsPath}`, {
@@ -16,6 +27,37 @@ const clearDatabase = async (): Promise<void> => {
   });
   expect(response.ok).toBe(true);
 };
+
+const clearUsers = async (): Promise<void> => {
+  const response = await fetch(
+    `${authEmulatorUrl}/emulator/v1/projects/${projectId}/accounts`,
+    { method: "DELETE" },
+  );
+  expect(response.ok).toBe(true);
+};
+
+// Creates a user in the Auth emulator and returns a real ID token for it.
+// The emulator accepts any API key.
+const signIn = async (
+  email: string,
+  { emailVerified = true } = {},
+): Promise<string> => {
+  const password = "emulator-only-password";
+  await getAuth(app).createUser({ email, password, emailVerified });
+
+  const response = await fetch(
+    `${authEmulatorUrl}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=emulator`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, returnSecureToken: true }),
+    },
+  );
+  const { idToken } = (await response.json()) as { idToken: string };
+  return idToken;
+};
+
+let ownerToken: string;
 
 const newProject: CreateProjectRequest = {
   name: "Launch",
@@ -31,6 +73,7 @@ const createProject = async (
 ): Promise<Project> => {
   const response = await callHandler(projectsHandler, {
     method: "POST",
+    headers: { authorization: `Bearer ${ownerToken}` },
     body: { ...newProject, ...overrides },
   });
   expect(response.statusCode).toBe(201);
@@ -42,8 +85,28 @@ const callProject = (
   method: string,
   body?: unknown,
 ): ReturnType<typeof callHandler> => {
-  return callHandler(projectHandler, { method, query: { uuid }, body });
+  return callHandler(projectHandler, {
+    method,
+    headers: { authorization: `Bearer ${ownerToken}` },
+    query: { uuid },
+    body,
+  });
 };
+
+const listProjects = (
+  query: Record<string, string> = {},
+): ReturnType<typeof callHandler> => {
+  return callHandler(projectsHandler, {
+    method: "GET",
+    headers: { authorization: `Bearer ${ownerToken}` },
+    query,
+  });
+};
+
+beforeAll(async () => {
+  await clearUsers();
+  ownerToken = await signIn("owner@example.com");
+});
 
 describe("projects API against the Firestore emulator", () => {
   beforeEach(async () => {
@@ -85,10 +148,7 @@ describe("projects API against the Firestore emulator", () => {
     const active = await createProject();
     await createProject({ name: "Later", status: "BACKLOG" });
 
-    const response = await callHandler(projectsHandler, {
-      method: "GET",
-      query: { status: "ACTIVE" },
-    });
+    const response = await listProjects({ status: "ACTIVE" });
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual([active]);
@@ -129,7 +189,7 @@ describe("projects API against the Firestore emulator", () => {
       .doc("corrupt")
       .set({ ...newProject, status: "ARCHIVED" });
 
-    const list = await callHandler(projectsHandler, { method: "GET" });
+    const list = await listProjects();
     expect(list.body).toEqual([valid]);
 
     const single = await callProject("corrupt", "GET");
@@ -137,6 +197,40 @@ describe("projects API against the Firestore emulator", () => {
     expect(single.body).toEqual({
       error: { code: "INTERNAL", message: "Stored project is invalid" },
     });
+  });
+});
+
+describe("authentication", () => {
+  it("rejects a request without a token", async () => {
+    const response = await callHandler(projectsHandler, { method: "GET" });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body).toMatchObject({
+      error: { code: "UNAUTHENTICATED" },
+    });
+  });
+
+  it("rejects a token that isn't a valid ID token", async () => {
+    const response = await callHandler(projectsHandler, {
+      method: "GET",
+      headers: { authorization: "Bearer not-a-token" },
+    });
+
+    expect(response.statusCode).toBe(401);
+  });
+
+  it("forbids a user whose email isn't verified", async () => {
+    const token = await signIn("unverified@example.com", {
+      emailVerified: false,
+    });
+
+    const response = await callHandler(projectsHandler, {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body).toMatchObject({ error: { code: "FORBIDDEN" } });
   });
 });
 

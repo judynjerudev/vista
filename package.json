@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:integration": "firebase emulators:exec --only firestore --project demo-vista \"vitest run --config vitest.integration.config.ts\"",
+    "test:integration": "firebase emulators:exec --only auth,firestore --project demo-vista \"vitest run --config vitest.integration.config.ts\"",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" \"api/**/*.ts\" \"server/**/*.ts\" \"shared/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"api/**/*.ts\" \"server/**/*.ts\" \"shared/**/*.ts\""
   },

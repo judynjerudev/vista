@@ -32,6 +32,9 @@ const toErrorResponse = (error: AppError): ErrorResponse => {
 
 export const sendError = (res: VercelResponse, error: unknown): void => {
   if (error instanceof AppError) {
+    if (error.code === "UNAUTHENTICATED") {
+      res.setHeader("WWW-Authenticate", "Bearer");
+    }
     res.status(statusByCode[error.code]).json(toErrorResponse(error));
     return;
   }

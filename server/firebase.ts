@@ -22,4 +22,5 @@ const getApp = (): App => {
   });
 };
 
-export const db = getFirestore(getApp());
+export const app = getApp();
+export const db = getFirestore(app);
