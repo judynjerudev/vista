@@ -1,3 +1,5 @@
+import type { CalendarDate } from "../calendarDate.js";
+
 export const projectStatuses = [
   "BACKLOG",
   "ACTIVE",
@@ -16,7 +18,7 @@ export interface Project {
   status: ProjectStatus;
   priority: ProjectPriority;
   ownerUuid: string;
-  dueDate: string | null;
+  dueDate: CalendarDate | null;
   createdAt: string;
   updatedAt: string;
 }
