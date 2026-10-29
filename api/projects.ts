@@ -14,9 +14,10 @@ import {
 const handleGet = async (
   request: VercelRequest,
   response: VercelResponse,
+  { user }: RequestContext,
 ): Promise<void> => {
   const filters = parseQuery(request, projectFiltersSchema);
-  const projects = await projectService.list(filters);
+  const projects = await projectService.list(user, filters);
   sendJson(response, 200, projects);
 };
 

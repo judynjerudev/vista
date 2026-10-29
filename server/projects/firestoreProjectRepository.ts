@@ -55,14 +55,20 @@ const readProject = (snapshot: DocumentSnapshot): Project => {
   return project;
 };
 
+// Checked on the raw document, before validation, so a corrupt project owned
+// by someone else is "not found" rather than an error that reveals it exists.
+const isOwnedBy = (snapshot: DocumentSnapshot, ownerUuid: string): boolean => {
+  return snapshot.exists && snapshot.get("ownerUuid") === ownerUuid;
+};
+
 export const createFirestoreProjectRepository = (
   db: Firestore,
 ): ProjectRepository => {
   const projectsRef = db.collection("projects");
 
   return {
-    findAll: async (filters) => {
-      let q: Query = projectsRef;
+    findAll: async (ownerUuid, filters) => {
+      let q: Query = projectsRef.where("ownerUuid", "==", ownerUuid);
 
       if (filters?.status) {
         q = q.where("status", "==", filters.status);
@@ -94,11 +100,11 @@ export const createFirestoreProjectRepository = (
 
     // The read and the write run in one transaction, so a concurrent delete
     // can't slip in between the existence check and the write.
-    update: (uuid, changes) => {
+    update: (uuid, ownerUuid, changes) => {
       return db.runTransaction(async (transaction) => {
         const ref = projectsRef.doc(uuid);
         const snap = await transaction.get(ref);
-        if (!snap.exists) {
+        if (!isOwnedBy(snap, ownerUuid)) {
           return undefined;
         }
 
@@ -107,11 +113,11 @@ export const createFirestoreProjectRepository = (
       });
     },
 
-    remove: (uuid) => {
+    remove: (uuid, ownerUuid) => {
       return db.runTransaction(async (transaction) => {
         const ref = projectsRef.doc(uuid);
         const snap = await transaction.get(ref);
-        if (!snap.exists) {
+        if (!isOwnedBy(snap, ownerUuid)) {
           return false;
         }
 

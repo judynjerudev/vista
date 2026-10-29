@@ -169,6 +169,34 @@ describe("projects API against the Firestore emulator", () => {
     expect(stored.exists).toBe(false);
   });
 
+  it("keeps each user's projects private", async () => {
+    const project = await createProject();
+    const strangerToken = await signIn("stranger@example.com");
+    const asStranger = (method: string, body?: unknown) => {
+      return callHandler(projectHandler, {
+        method,
+        headers: { authorization: `Bearer ${strangerToken}` },
+        query: { uuid: project.uuid },
+        body,
+      });
+    };
+
+    const strangersList = await callHandler(projectsHandler, {
+      method: "GET",
+      headers: { authorization: `Bearer ${strangerToken}` },
+    });
+    expect(strangersList.body).toEqual([]);
+
+    expect((await asStranger("GET")).statusCode).toBe(404);
+    expect((await asStranger("PUT", { name: "Taken over" })).statusCode).toBe(
+      404,
+    );
+    expect((await asStranger("DELETE")).statusCode).toBe(404);
+
+    const ownersView = await callProject(project.uuid, "GET");
+    expect(ownersView.body).toEqual(project);
+  });
+
   it("deletes a project exactly once under concurrent requests", async () => {
     const { uuid } = await createProject();
 

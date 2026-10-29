@@ -8,25 +8,32 @@ import type { AuthUser } from "../auth/authenticate.js";
 import { notFound } from "../errors.js";
 import type { ProjectRepository } from "./projectRepository.js";
 
+// Every method acts for a signed-in user, who only ever sees their own
+// projects. Someone else's project is reported as not found rather than
+// forbidden, so its ID can't be used to probe whether it exists.
 export type ProjectService = {
-  list: (filters?: ProjectFilters) => Promise<Project[]>;
-  get: (uuid: string) => Promise<Project>;
+  list: (actor: AuthUser, filters?: ProjectFilters) => Promise<Project[]>;
+  get: (actor: AuthUser, uuid: string) => Promise<Project>;
   create: (actor: AuthUser, input: CreateProjectRequest) => Promise<Project>;
-  update: (uuid: string, input: UpdateProjectRequest) => Promise<Project>;
-  remove: (uuid: string) => Promise<void>;
+  update: (
+    actor: AuthUser,
+    uuid: string,
+    input: UpdateProjectRequest,
+  ) => Promise<Project>;
+  remove: (actor: AuthUser, uuid: string) => Promise<void>;
 };
 
 export const createProjectService = (
   repository: ProjectRepository,
 ): ProjectService => {
   return {
-    list: (filters) => {
-      return repository.findAll(filters);
+    list: (actor, filters) => {
+      return repository.findAll(actor.uid, filters);
     },
 
-    get: async (uuid) => {
+    get: async (actor, uuid) => {
       const project = await repository.findByUuid(uuid);
-      if (!project) {
+      if (!project || project.ownerUuid !== actor.uid) {
         throw notFound("Project");
       }
       return project;
@@ -42,8 +49,8 @@ export const createProjectService = (
       });
     },
 
-    update: async (uuid, input) => {
-      const project = await repository.update(uuid, {
+    update: async (actor, uuid, input) => {
+      const project = await repository.update(uuid, actor.uid, {
         ...input,
         updatedAt: new Date().toISOString(),
       });
@@ -53,8 +60,8 @@ export const createProjectService = (
       return project;
     },
 
-    remove: async (uuid) => {
-      const deleted = await repository.remove(uuid);
+    remove: async (actor, uuid) => {
+      const deleted = await repository.remove(uuid, actor.uid);
       if (!deleted) {
         throw notFound("Project");
       }
