@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { calendarDateSchema } from "../calendarDate.js";
 import type { Project } from "./model.js";
 import { projectPriorities, projectStatuses } from "./model.js";
 
@@ -9,7 +10,7 @@ export const createProjectSchema = z.object({
   status: z.enum(projectStatuses),
   priority: z.enum(projectPriorities),
   ownerUuid: z.string().min(1, "Owner is required"),
-  dueDate: z.string().nullable().default(null),
+  dueDate: calendarDateSchema.nullable().default(null),
 });
 
 export const updateProjectSchema = createProjectSchema.partial();
