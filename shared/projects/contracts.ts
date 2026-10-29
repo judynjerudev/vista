@@ -4,16 +4,21 @@ import { calendarDateSchema } from "../calendarDate.js";
 import type { Project } from "./model.js";
 import { projectPriorities, projectStatuses } from "./model.js";
 
-export const createProjectSchema = z.object({
+const projectFieldsSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
   status: z.enum(projectStatuses),
   priority: z.enum(projectPriorities),
   ownerUuid: z.string().min(1, "Owner is required"),
-  dueDate: calendarDateSchema.nullable().default(null),
+  dueDate: calendarDateSchema.nullable(),
 });
 
-export const updateProjectSchema = createProjectSchema.partial();
+export const createProjectSchema = projectFieldsSchema.extend({
+  dueDate: projectFieldsSchema.shape.dueDate.default(null),
+});
+
+// No defaults here: a field missing from an update must stay unchanged.
+export const updateProjectSchema = projectFieldsSchema.partial();
 
 export const projectFiltersSchema = z.object({
   status: z.enum(projectStatuses).optional(),
