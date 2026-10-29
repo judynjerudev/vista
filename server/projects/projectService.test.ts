@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Project } from "../../shared/projects/model.js";
 import type { CreateProjectRequest } from "../../shared/projects/contracts.js";
+import type { AuthUser } from "../auth/authenticate.js";
 import { AppError } from "../errors.js";
 import type { ProjectRepository } from "./projectRepository.js";
 import { createProjectService } from "./projectService.js";
@@ -80,9 +81,10 @@ const createRequest: CreateProjectRequest = {
   description: "Fresh",
   status: "BACKLOG",
   priority: "LOW",
-  ownerUuid: "owner-2",
   dueDate: null,
 };
+
+const actor: AuthUser = { uid: "owner-2", email: "owner@example.com" };
 
 const expectNotFound = async (promise: Promise<unknown>) => {
   await expect(promise).rejects.toBeInstanceOf(AppError);
@@ -112,15 +114,16 @@ describe("projectService", () => {
     expect(await service.list({ status: "BACKLOG" })).toEqual([backlogProject]);
   });
 
-  it("sets both timestamps when creating a project", async () => {
+  it("sets the owner and both timestamps when creating a project", async () => {
     const repository = createInMemoryProjectRepository();
     const service = createProjectService(repository);
 
-    const project = await service.create(createRequest);
+    const project = await service.create(actor, createRequest);
 
     expect(project).toEqual({
       uuid: "project-1",
       ...createRequest,
+      ownerUuid: "owner-2",
       createdAt: now,
       updatedAt: now,
     });

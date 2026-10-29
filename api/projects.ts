@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 import { authenticate } from "../server/auth/index.js";
 import { methodRouter } from "../server/http/handler.js";
+import type { RequestContext } from "../server/http/handler.js";
 import { parseBody, parseQuery } from "../server/http/request.js";
 import { sendJson } from "../server/http/responses.js";
 import { projectService } from "../server/projects/index.js";
@@ -22,9 +23,10 @@ const handleGet = async (
 const handlePost = async (
   request: VercelRequest,
   response: VercelResponse,
+  { user }: RequestContext,
 ): Promise<void> => {
   const input = parseBody(request, createProjectSchema);
-  const project = await projectService.create(input);
+  const project = await projectService.create(user, input);
   sendJson(response, 201, project);
 };
 
