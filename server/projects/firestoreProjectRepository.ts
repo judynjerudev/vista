@@ -1,15 +1,8 @@
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  updateDoc,
-  where,
-} from "firebase/firestore";
-import type { DocumentSnapshot, Firestore } from "firebase/firestore";
+import type {
+  DocumentSnapshot,
+  Firestore,
+  Query,
+} from "firebase-admin/firestore";
 
 import { toCalendarDate } from "../../shared/calendarDate.js";
 import type { Project } from "../../shared/projects/model.js";
@@ -23,24 +16,20 @@ export const toProject = (snapshot: DocumentSnapshot): Project => {
 export const createFirestoreProjectRepository = (
   db: Firestore,
 ): ProjectRepository => {
-  const projectsRef = collection(db, "projects");
+  const projectsRef = db.collection("projects");
 
   return {
     findAll: async (filters) => {
-      const constraints = [];
+      let q: Query = projectsRef;
 
       if (filters?.status) {
-        constraints.push(where("status", "==", filters.status));
+        q = q.where("status", "==", filters.status);
       }
       if (filters?.priority) {
-        constraints.push(where("priority", "==", filters.priority));
+        q = q.where("priority", "==", filters.priority);
       }
 
-      const q =
-        constraints.length > 0
-          ? query(projectsRef, ...constraints)
-          : projectsRef;
-      const snapshot = await getDocs(q);
+      const snapshot = await q.get();
 
       return snapshot.docs.map((d) => {
         return toProject(d);
@@ -48,36 +37,36 @@ export const createFirestoreProjectRepository = (
     },
 
     findByUuid: async (uuid) => {
-      const snap = await getDoc(doc(db, "projects", uuid));
-      if (!snap.exists()) {
+      const snap = await projectsRef.doc(uuid).get();
+      if (!snap.exists) {
         return undefined;
       }
       return toProject(snap);
     },
 
     insert: async (data) => {
-      const ref = await addDoc(projectsRef, data);
+      const ref = await projectsRef.add(data);
       return { uuid: ref.id, ...data };
     },
 
     update: async (uuid, changes) => {
-      const ref = doc(db, "projects", uuid);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
+      const ref = projectsRef.doc(uuid);
+      const snap = await ref.get();
+      if (!snap.exists) {
         return undefined;
       }
 
-      await updateDoc(ref, changes);
+      await ref.update(changes);
       return { ...toProject(snap), ...changes };
     },
 
     remove: async (uuid) => {
-      const ref = doc(db, "projects", uuid);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
+      const ref = projectsRef.doc(uuid);
+      const snap = await ref.get();
+      if (!snap.exists) {
         return false;
       }
-      await deleteDoc(ref);
+      await ref.delete();
       return true;
     },
   };
