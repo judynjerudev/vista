@@ -40,4 +40,10 @@ describe("project contracts", () => {
 
     expect(result.success && result.data.dueDate).toBeNull();
   });
+
+  it("leaves out a due date the update doesn't mention", () => {
+    const result = updateProjectSchema.safeParse({ name: "Renamed" });
+
+    expect(result.success && result.data).toEqual({ name: "Renamed" });
+  });
 });
