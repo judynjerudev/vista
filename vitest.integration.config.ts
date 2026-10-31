@@ -12,5 +12,9 @@ export default defineConfig({
     },
     // The test files share one emulator database.
     fileParallelism: false,
+    // Vercel's runtime can't `require()` an ES module, although Node 24 can.
+    // Turning that off here makes a dependency that relies on it fail these
+    // tests instead of failing in production.
+    execArgv: ['--no-experimental-require-module'],
   },
 })
