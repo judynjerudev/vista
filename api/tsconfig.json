@@ -1,0 +1,13 @@
+{
+  // Vercel type-checks each function with the tsconfig.json nearest to it.
+  // Without this file that's the root one, which only lists project
+  // references, so Vercel would type-check without our settings.
+  "extends": "../tsconfig.api.json",
+  "compilerOptions": {
+    // Repeated from tsconfig.api.json on purpose: Vercel looks for `module`
+    // in this file's own options, before applying "extends". If it's missing,
+    // Vercel sets `module` to NodeNext and turns `strict` off.
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  }
+}
