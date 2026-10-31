@@ -4,24 +4,38 @@ const required = (): z.ZodString => {
   return z.string({ error: "is required" }).trim().min(1, "is required");
 };
 
+// `VAR=` in a .env file or a blank value in Vercel arrives as "", which means
+// "not set" here. Whether a missing credential is a problem is decided by
+// `findMissingCredentials`, which knows about the emulator.
+const optional = <T extends z.ZodType>(schema: T) => {
+  return z.preprocess((value) => {
+    return typeof value === "string" && value.trim() === "" ? undefined : value;
+  }, schema.optional());
+};
+
 const serverEnvSchema = z.object({
   FIREBASE_PROJECT_ID: required(),
-  FIREBASE_CLIENT_EMAIL: required()
-    .pipe(z.email({ error: "must be an email address" }))
-    .optional(),
-  FIREBASE_PRIVATE_KEY: required()
-    // Vercel and .env files store the key on one line with escaped newlines.
-    .transform((key) => {
-      return key.replace(/\\n/g, "\n");
-    })
-    .refine(
-      (key) => {
-        return key.includes("-----BEGIN PRIVATE KEY-----");
-      },
-      { error: "must be a PEM private key" },
-    )
-    .optional(),
-  FIRESTORE_EMULATOR_HOST: required().optional(),
+  FIREBASE_CLIENT_EMAIL: optional(
+    z
+      .string()
+      .trim()
+      .pipe(z.email({ error: "must be an email address" })),
+  ),
+  FIREBASE_PRIVATE_KEY: optional(
+    z
+      .string()
+      // Vercel and .env files store the key on one line with escaped newlines.
+      .transform((key) => {
+        return key.replace(/\\n/g, "\n");
+      })
+      .refine(
+        (key) => {
+          return key.includes("-----BEGIN PRIVATE KEY-----");
+        },
+        { error: "must be a PEM private key" },
+      ),
+  ),
+  FIRESTORE_EMULATOR_HOST: optional(z.string().trim()),
 });
 
 const credentialVariables = [

@@ -66,6 +66,23 @@ describe("loadServerConfig", () => {
     expect(error.message).not.toContain("secret-key-body");
   });
 
+  it("treats blank optional variables as not set", () => {
+    expect(
+      loadServerConfig({ ...validEnv, FIRESTORE_EMULATOR_HOST: "" }),
+    ).toEqual(loadServerConfig(validEnv));
+  });
+
+  it("allows blank credentials when using the emulator", () => {
+    expect(
+      loadServerConfig({
+        FIREBASE_PROJECT_ID: "demo-vista",
+        FIREBASE_CLIENT_EMAIL: "",
+        FIREBASE_PRIVATE_KEY: " ",
+        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8080",
+      }).credentials,
+    ).toBeNull();
+  });
+
   it("needs no credentials when using the Firestore emulator", () => {
     expect(
       loadServerConfig({
