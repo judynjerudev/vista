@@ -91,4 +91,34 @@ describe("loadServerConfig", () => {
       }),
     ).toEqual({ projectId: "demo-vista", credentials: null });
   });
+
+  it.each(["production", "preview"])(
+    "refuses emulator variables in a %s deployment",
+    (vercelEnv) => {
+      const error = loadError({
+        ...validEnv,
+        VERCEL_ENV: vercelEnv,
+        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8080",
+        FIREBASE_AUTH_EMULATOR_HOST: "127.0.0.1:9099",
+      });
+
+      expect(error.message).toContain(
+        `FIRESTORE_EMULATOR_HOST must not be set in a ${vercelEnv} deployment`,
+      );
+      expect(error.message).toContain(
+        `FIREBASE_AUTH_EMULATOR_HOST must not be set in a ${vercelEnv} deployment`,
+      );
+    },
+  );
+
+  it("allows emulator variables under `vercel dev`", () => {
+    expect(
+      loadServerConfig({
+        FIREBASE_PROJECT_ID: "demo-vista",
+        VERCEL_ENV: "development",
+        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8080",
+        FIREBASE_AUTH_EMULATOR_HOST: "127.0.0.1:9099",
+      }).credentials,
+    ).toBeNull();
+  });
 });

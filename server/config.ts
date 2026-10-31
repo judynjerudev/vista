@@ -59,6 +59,29 @@ const findMissingCredentials = (
     });
 };
 
+const emulatorVariables = [
+  "FIRESTORE_EMULATOR_HOST",
+  "FIREBASE_AUTH_EMULATOR_HOST",
+] as const;
+
+// With `FIREBASE_AUTH_EMULATOR_HOST` set, the Admin SDK accepts unsigned ID
+// tokens, so anyone could act as any user. Deployments use the real Firebase
+// project, so emulator variables there are always a mistake.
+const findEmulatorsInDeployment = (
+  env: Record<string, string | undefined>,
+): string[] => {
+  if (env.VERCEL_ENV !== "production" && env.VERCEL_ENV !== "preview") {
+    return [];
+  }
+  return emulatorVariables
+    .filter((name) => {
+      return env[name]?.trim();
+    })
+    .map((name) => {
+      return `${name} must not be set in a ${env.VERCEL_ENV} deployment`;
+    });
+};
+
 export type FirebaseCredentials = {
   projectId: string;
   clientEmail: string;
@@ -89,6 +112,7 @@ export const loadServerConfig = (
         return `${issue.path.join(".")} ${issue.message}`;
       }),
       ...findMissingCredentials(env),
+      ...findEmulatorsInDeployment(env),
     ]),
   ];
 
