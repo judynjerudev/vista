@@ -98,6 +98,30 @@ describe("http", () => {
     expect(init?.method).toBe("POST");
   });
 
+  it("sends no Content-Type without a body", async () => {
+    respondWith(Response.json([]));
+
+    await http("/api/projects");
+
+    const [, init] = vi.mocked(fetch).mock.calls[0];
+    expect(new Headers(init?.headers).has("Content-Type")).toBe(false);
+  });
+
+  it("keeps a Content-Type the caller set", async () => {
+    respondWith(Response.json([]));
+
+    await http("/api/projects", {
+      method: "POST",
+      body: "name=Project",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0];
+    expect(new Headers(init?.headers).get("Content-Type")).toBe(
+      "application/x-www-form-urlencoded",
+    );
+  });
+
   it("sends no Authorization header when signed out", async () => {
     respondWith(Response.json([]));
 
