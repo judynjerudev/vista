@@ -51,6 +51,8 @@ Create the service account key in the Firebase console under Project settings â†
 
 `server/config.ts` validates the server variables when a function starts. If any is missing or malformed, the function fails with one error naming every bad variable, for example `Invalid server configuration: FIREBASE_PRIVATE_KEY is required`. Values are never logged. `src/lib/config.ts` does the same for the browser variables and shows an error screen naming them.
 
+Blank values count as not set. The emulator variables are refused in Vercel production and preview deployments: with `FIREBASE_AUTH_EMULATOR_HOST` set, the Admin SDK accepts unsigned tokens, so anyone could act as any user.
+
 ## Authentication and access
 
 Users sign in with Google or with a link emailed to them (passwordless). There are no passwords to store or reset.
