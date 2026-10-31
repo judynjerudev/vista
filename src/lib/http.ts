@@ -81,7 +81,11 @@ export const http = async <T>(
   options?: RequestInit,
 ): Promise<T> => {
   const headers = new Headers(options?.headers);
-  headers.set("Content-Type", "application/json");
+  // Only requests with a body have content to describe. A caller's own
+  // Content-Type wins.
+  if (options?.body !== undefined && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
   const token = await getToken();
   if (token) {
