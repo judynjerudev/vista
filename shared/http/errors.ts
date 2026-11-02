@@ -4,6 +4,7 @@ export const errorCodes = [
   "FORBIDDEN",
   "NOT_FOUND",
   "METHOD_NOT_ALLOWED",
+  "RATE_LIMITED",
   "INTERNAL",
 ] as const;
 export type ErrorCode = (typeof errorCodes)[number];

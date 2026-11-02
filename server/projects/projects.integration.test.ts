@@ -15,6 +15,7 @@ import type { CreateProjectRequest } from "../../shared/projects/contracts.js";
 import type { Project } from "../../shared/projects/model.js";
 import { app, db } from "../firebase.js";
 import { callHandler } from "../http/testing.js";
+import { rateLimitRules } from "../rateLimit/index.js";
 
 const projectId = process.env.FIREBASE_PROJECT_ID;
 const emulatorUrl = `http://${process.env.FIRESTORE_EMULATOR_HOST}`;
@@ -263,6 +264,43 @@ describe("authentication", () => {
 
     expect(response.statusCode).toBe(403);
     expect(response.body).toMatchObject({ error: { code: "FORBIDDEN" } });
+  });
+});
+
+describe("rate limiting", () => {
+  it("tells clients how many requests they have left", async () => {
+    const token = await signIn("reader@example.com");
+
+    const response = await callHandler(projectsHandler, {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers).toMatchObject({
+      "ratelimit-limit": String(rateLimitRules.read.requests),
+      "ratelimit-remaining": String(rateLimitRules.read.requests - 1),
+    });
+  });
+
+  it("rejects a user's writes over the limit", async () => {
+    const token = await signIn("busy@example.com");
+    const deleteMissing = () => {
+      return callHandler(projectHandler, {
+        method: "DELETE",
+        headers: { authorization: `Bearer ${token}` },
+        query: { uuid: "missing" },
+      });
+    };
+
+    for (let i = 0; i < rateLimitRules.write.requests; i++) {
+      expect((await deleteMissing()).statusCode).toBe(404);
+    }
+    const limited = await deleteMissing();
+
+    expect(limited.statusCode).toBe(429);
+    expect(Number(limited.headers["retry-after"])).toBeGreaterThan(0);
+    expect(limited.body).toMatchObject({ error: { code: "RATE_LIMITED" } });
   });
 });
 

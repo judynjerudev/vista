@@ -6,6 +6,7 @@ import type { RequestContext } from "../../server/http/handler.js";
 import { getRouteParam, parseBody } from "../../server/http/request.js";
 import { sendJson, sendNoContent } from "../../server/http/responses.js";
 import { projectService } from "../../server/projects/index.js";
+import { rateLimit } from "../../server/rateLimit/index.js";
 import { updateProjectSchema } from "../../shared/projects/contracts.js";
 
 const getUuid = (request: VercelRequest): string => {
@@ -43,5 +44,5 @@ const handleDelete = async (
 
 export default methodRouter(
   { GET: handleGet, PUT: handlePut, DELETE: handleDelete },
-  { authenticate },
+  { authenticate, rateLimit },
 );

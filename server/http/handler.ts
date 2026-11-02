@@ -5,6 +5,11 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { AuthUser, Authenticator } from "../auth/authenticate.js";
 import { AppError } from "../errors.js";
 import { withRequestId } from "../logger.js";
+import type {
+  RateLimitKind,
+  RateLimitResult,
+  RateLimiter,
+} from "../rateLimit/rateLimiter.js";
 import { sendError } from "./responses.js";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -23,8 +28,51 @@ export type RouteHandler = (
 type RouteHandlers = Partial<Record<HttpMethod, RouteHandler>>;
 
 type RouterOptions = {
-  // Required, so a new route can't forget to authenticate its callers.
+  // Both required, so a new route can't forget to authenticate or
+  // rate-limit its callers.
   authenticate: Authenticator;
+  rateLimit: RateLimiter;
+};
+
+const rateLimitKind = (method: HttpMethod): RateLimitKind => {
+  return method === "GET" ? "read" : "write";
+};
+
+const secondsUntil = (timestamp: number): number => {
+  return Math.max(0, Math.ceil((timestamp - Date.now()) / 1000));
+};
+
+// The RateLimit-* headers from the IETF draft that most APIs send, so
+// clients can slow down before they hit the limit.
+const setRateLimitHeaders = (
+  response: VercelResponse,
+  { limit, remaining, resetAt }: RateLimitResult,
+): void => {
+  response.setHeader("RateLimit-Limit", String(limit));
+  response.setHeader("RateLimit-Remaining", String(remaining));
+  response.setHeader("RateLimit-Reset", String(secondsUntil(resetAt)));
+};
+
+const enforceRateLimit = async (
+  rateLimit: RateLimiter,
+  method: HttpMethod,
+  user: AuthUser,
+  response: VercelResponse,
+): Promise<void> => {
+  const result = await rateLimit(rateLimitKind(method), user.uid);
+  if (!result) {
+    return;
+  }
+
+  setRateLimitHeaders(response, result);
+  if (!result.allowed) {
+    const retryAfter = Math.max(1, secondsUntil(result.resetAt));
+    response.setHeader("Retry-After", String(retryAfter));
+    throw new AppError(
+      "RATE_LIMITED",
+      `Too many requests. Try again in ${retryAfter} ${retryAfter === 1 ? "second" : "seconds"}.`,
+    );
+  }
 };
 
 const route = async (
@@ -34,7 +82,8 @@ const route = async (
   request: VercelRequest,
   response: VercelResponse,
 ): Promise<void> => {
-  const handle = handlers[request.method as HttpMethod];
+  const method = request.method as HttpMethod;
+  const handle = handlers[method];
 
   if (!handle) {
     response.setHeader("Allow", Object.keys(handlers).join(", "));
@@ -46,7 +95,10 @@ const route = async (
   }
 
   try {
+    // After authentication, so limits are per user, and requests without a
+    // valid token are turned away before they reach Redis.
     const user = await options.authenticate(request);
+    await enforceRateLimit(options.rateLimit, method, user, response);
     await handle(request, response, { requestId, user });
   } catch (error) {
     sendError(response, error);

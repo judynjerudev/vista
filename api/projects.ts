@@ -6,6 +6,7 @@ import type { RequestContext } from "../server/http/handler.js";
 import { parseBody, parseQuery } from "../server/http/request.js";
 import { sendJson } from "../server/http/responses.js";
 import { projectService } from "../server/projects/index.js";
+import { rateLimit } from "../server/rateLimit/index.js";
 import {
   createProjectSchema,
   projectFiltersSchema,
@@ -33,5 +34,5 @@ const handlePost = async (
 
 export default methodRouter(
   { GET: handleGet, POST: handlePost },
-  { authenticate },
+  { authenticate, rateLimit },
 );

@@ -10,6 +10,7 @@ const statusByCode: Record<ErrorCode, number> = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   METHOD_NOT_ALLOWED: 405,
+  RATE_LIMITED: 429,
   INTERNAL: 500,
 };
 

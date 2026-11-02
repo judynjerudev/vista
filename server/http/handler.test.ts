@@ -4,6 +4,8 @@ import { z } from "zod";
 import type { AuthUser } from "../auth/authenticate.js";
 import { AppError, notFound } from "../errors.js";
 import { logError } from "../logger.js";
+import { noRateLimit } from "../rateLimit/rateLimiter.js";
+import type { RateLimiter } from "../rateLimit/rateLimiter.js";
 import { methodRouter } from "./handler.js";
 import { parseBody } from "./request.js";
 import { sendJson } from "./responses.js";
@@ -15,6 +17,13 @@ const options = {
   authenticate: async (): Promise<AuthUser> => {
     return signedInUser;
   },
+  rateLimit: noRateLimit,
+};
+
+const limitedTo = (result: Awaited<ReturnType<RateLimiter>>): RateLimiter => {
+  return vi.fn(async () => {
+    return result;
+  });
 };
 
 describe("methodRouter", () => {
@@ -138,6 +147,7 @@ describe("methodRouter", () => {
     const router = methodRouter(
       { GET: handler },
       {
+        ...options,
         authenticate: async () => {
           throw new AppError("UNAUTHENTICATED", "Sign in required");
         },
@@ -152,5 +162,128 @@ describe("methodRouter", () => {
     expect(response.body).toEqual({
       error: { code: "UNAUTHENTICATED", message: "Sign in required" },
     });
+  });
+
+  it("counts reads and writes against the signed-in user", async () => {
+    const rateLimit = limitedTo(null);
+    const router = methodRouter(
+      { GET: vi.fn(), POST: vi.fn() },
+      { ...options, rateLimit },
+    );
+
+    await call(router, { method: "GET" });
+    await call(router, { method: "POST" });
+
+    expect(rateLimit).toHaveBeenNthCalledWith(1, "read", "user-1");
+    expect(rateLimit).toHaveBeenNthCalledWith(2, "write", "user-1");
+  });
+
+  it("sends the rate limit headers with an allowed request", async () => {
+    const router = methodRouter(
+      {
+        GET: async (_, response) => {
+          sendJson(response, 200, { ok: true });
+        },
+      },
+      {
+        ...options,
+        rateLimit: limitedTo({
+          allowed: true,
+          limit: 120,
+          remaining: 119,
+          resetAt: Date.now() + 30_000,
+        }),
+      },
+    );
+
+    const response = await call(router, { method: "GET" });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers).toMatchObject({
+      "ratelimit-limit": "120",
+      "ratelimit-remaining": "119",
+      "ratelimit-reset": "30",
+    });
+    expect(response.headers["retry-after"]).toBeUndefined();
+  });
+
+  it("rejects a request over the limit with 429 and when to retry", async () => {
+    const handler = vi.fn(async () => {});
+    const router = methodRouter(
+      { POST: handler },
+      {
+        ...options,
+        rateLimit: limitedTo({
+          allowed: false,
+          limit: 30,
+          remaining: 0,
+          resetAt: Date.now() + 12_000,
+        }),
+      },
+    );
+
+    const response = await call(router, { method: "POST" });
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(429);
+    expect(response.headers).toMatchObject({
+      "retry-after": "12",
+      "ratelimit-limit": "30",
+      "ratelimit-remaining": "0",
+      "ratelimit-reset": "12",
+    });
+    expect(response.body).toEqual({
+      error: {
+        code: "RATE_LIMITED",
+        message: "Too many requests. Try again in 12 seconds.",
+      },
+    });
+  });
+
+  it("asks a client to wait at least a second, even as the window resets", async () => {
+    const router = methodRouter(
+      { POST: vi.fn() },
+      {
+        ...options,
+        rateLimit: limitedTo({
+          allowed: false,
+          limit: 30,
+          remaining: 0,
+          resetAt: Date.now(),
+        }),
+      },
+    );
+
+    const response = await call(router, { method: "POST" });
+
+    expect(response.headers["retry-after"]).toBe("1");
+    expect(response.body).toMatchObject({
+      error: { message: "Too many requests. Try again in 1 second." },
+    });
+  });
+
+  it("sends no rate limit headers when the limiter makes no decision", async () => {
+    const router = methodRouter({ GET: vi.fn() }, options);
+
+    const response = await call(router, { method: "GET" });
+
+    expect(Object.keys(response.headers)).toEqual(["x-request-id"]);
+  });
+
+  it("doesn't count requests that fail authentication", async () => {
+    const rateLimit = limitedTo(null);
+    const router = methodRouter(
+      { GET: vi.fn() },
+      {
+        authenticate: async () => {
+          throw new AppError("UNAUTHENTICATED", "Sign in required");
+        },
+        rateLimit,
+      },
+    );
+
+    await call(router, { method: "GET" });
+
+    expect(rateLimit).not.toHaveBeenCalled();
   });
 });
