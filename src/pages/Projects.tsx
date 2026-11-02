@@ -5,20 +5,19 @@ import type { Project } from "@/features/projects";
 import {
   ProjectForm,
   ProjectsTable,
+  useCreateProject,
+  useDeleteProject,
   useProjectForm,
   useProjects,
+  useUpdateProject,
 } from "@/features/projects";
 import { getErrorMessage } from "@/lib/http";
 
 export const Projects = () => {
-  const {
-    projects,
-    loading,
-    error,
-    createProject,
-    updateProject,
-    deleteProject,
-  } = useProjects();
+  const { projects, loading, error } = useProjects();
+  const createProject = useCreateProject();
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
   const { formOpen, editingProject, openCreateForm, openEditForm, closeForm } =
     useProjectForm();
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -29,7 +28,7 @@ export const Projects = () => {
     }
     setDeleteError(null);
     try {
-      await deleteProject(project.uuid);
+      await deleteProject.mutateAsync(project.uuid);
     } catch (err) {
       setDeleteError(
         getErrorMessage(err, `Couldn't delete "${project.name}". Try again.`),
@@ -64,9 +63,12 @@ export const Projects = () => {
           project={editingProject}
           onSubmit={async (formData) => {
             if (editingProject) {
-              await updateProject(editingProject.uuid, formData);
+              await updateProject.mutateAsync({
+                uuid: editingProject.uuid,
+                input: formData,
+              });
             } else {
-              await createProject(formData);
+              await createProject.mutateAsync(formData);
             }
             closeForm();
           }}
