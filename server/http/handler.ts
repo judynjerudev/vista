@@ -114,6 +114,10 @@ export const methodRouter = (
     // failure can be matched to its logs.
     const requestId = randomUUID();
     response.setHeader("x-request-id", requestId);
+    // Every response is one user's private data, or an error about their
+    // request: browsers and shared caches (CDNs, proxies) must not keep it.
+    // The app caches data itself, in memory, and clears it on sign-out.
+    response.setHeader("Cache-Control", "private, no-store");
 
     return withRequestId(requestId, () => {
       return route(handlers, options, requestId, request, response);

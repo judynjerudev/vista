@@ -9,7 +9,14 @@ export type {
 } from "@shared/projects/contracts";
 
 export { projectsApi } from "./api";
-export { useProjectForm, useProjects } from "./hooks";
+export {
+  projectKeys,
+  useCreateProject,
+  useDeleteProject,
+  useProjectForm,
+  useProjects,
+  useUpdateProject,
+} from "./hooks";
 export type { DueProject } from "./selectors";
 export {
   countProjectsByStatus,

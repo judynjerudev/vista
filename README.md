@@ -82,6 +82,17 @@ Deploy the rules after changing them:
 npx firebase deploy --only firestore:rules --project <project-id>
 ```
 
+## Caching
+
+The browser keeps fetched data in memory with [TanStack Query](https://tanstack.com/query). The API never lets anything else store it.
+
+- **One shared cache:** `src/main.tsx` creates a single `QueryClient` (`src/lib/queryClient.ts`) for the whole app. The overview and the Projects page use the same `useProjects` query, so they share one list and one request.
+- **Freshness:** data counts as fresh for 30 seconds. Within that time, switching pages shows the cache without a request. After it, the cache is shown straight away and refreshed in the background, including when you return to the tab.
+- **Writes:** `useCreateProject`, `useUpdateProject` and `useDeleteProject` put the saved project from the API's response into the cached list, so no extra request is needed. If a write fails, the list is fetched again in case it's out of date.
+- **Retries:** failed reads are retried twice for network and server errors only. A `4xx` would fail again, and retrying a `429` would only use up more of the rate limit.
+- **Sign-out:** `useClearCacheOnUserChange` clears the cache when the user signs out, their session expires, or a different user signs in.
+- **The API's side:** every response has `Cache-Control: private, no-store`, so browsers, CDNs and proxies don't keep copies of one user's data.
+
 ## Rate limiting
 
 Each signed-in user gets **120 reads (`GET`) and 30 writes a minute**, counted separately, in a sliding window. The limits are in `server/rateLimit/index.ts`.
@@ -155,7 +166,7 @@ src/            Browser app
   pages/          Screens; compose features
   features/       One folder per domain (auth/, projects/)
   components/     ui/ (generic primitives), layout/ (app shell)
-  lib/            Generic helpers (config, fetch client, dates)
+  lib/            Generic helpers (config, fetch client, query client, dates)
         │
         │ HTTP / JSON
         ▼

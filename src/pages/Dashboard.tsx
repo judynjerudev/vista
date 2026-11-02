@@ -5,12 +5,10 @@ import {
   getRecentlyCreatedProjects,
   getRecentlyUpdatedProjects,
   PriorityBreakdownCard,
-  ProjectForm,
   ProjectsTable,
   RecentlyUpdatedCard,
   StatisticsCard,
   StatusDistributionCard,
-  useProjectForm,
   useProjects,
 } from "@/features/projects";
 
@@ -19,9 +17,7 @@ type DashboardProps = {
 };
 
 export const Dashboard = ({ onNavigateToProjects }: DashboardProps) => {
-  const { projects, loading, error, createProject, updateProject } =
-    useProjects();
-  const { formOpen, editingProject, closeForm } = useProjectForm();
+  const { projects, loading, error } = useProjects();
 
   const activeCount = countProjectsByStatus(projects, "ACTIVE");
   const blockedCount = countProjectsByStatus(projects, "BLOCKED");
@@ -100,21 +96,6 @@ export const Dashboard = ({ onNavigateToProjects }: DashboardProps) => {
           <ProjectsTable projects={recentProjects} />
         )}
       </div>
-
-      {formOpen && (
-        <ProjectForm
-          project={editingProject}
-          onSubmit={async (formData) => {
-            if (editingProject) {
-              await updateProject(editingProject.uuid, formData);
-            } else {
-              await createProject(formData);
-            }
-            closeForm();
-          }}
-          onCancel={closeForm}
-        />
-      )}
     </div>
   );
 };

@@ -48,6 +48,24 @@ describe("methodRouter", () => {
     expect(response.headers["x-request-id"]).toMatch(/^[0-9a-f-]{36}$/);
   });
 
+  it.each(["GET", "DELETE"])(
+    "stops browsers and shared caches storing a %s response",
+    async (method) => {
+      const router = methodRouter(
+        {
+          GET: async (_, response) => {
+            sendJson(response, 200, { ok: true });
+          },
+        },
+        options,
+      );
+
+      const response = await call(router, { method });
+
+      expect(response.headers["cache-control"]).toBe("private, no-store");
+    },
+  );
+
   it("rejects an unsupported method with the allowed ones", async () => {
     const router = methodRouter({ GET: vi.fn(), POST: vi.fn() }, options);
 
@@ -267,7 +285,10 @@ describe("methodRouter", () => {
 
     const response = await call(router, { method: "GET" });
 
-    expect(Object.keys(response.headers)).toEqual(["x-request-id"]);
+    expect(Object.keys(response.headers).sort()).toEqual([
+      "cache-control",
+      "x-request-id",
+    ]);
   });
 
   it("doesn't count requests that fail authentication", async () => {
