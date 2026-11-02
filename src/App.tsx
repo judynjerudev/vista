@@ -10,6 +10,7 @@ import {
 import type { NavigationItem } from "./components/layout/Sidebar";
 import { Layout } from "./components/layout/Layout";
 import { SignInScreen, useAuth } from "./features/auth";
+import { useClearCacheOnUserChange } from "./lib/useClearCacheOnUserChange";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 
@@ -46,6 +47,7 @@ const pageTitles: Record<string, string> = {
 const App = () => {
   const auth = useAuth();
   const [currentPath, setCurrentPath] = useState("/");
+  useClearCacheOnUserChange(auth.status === "signedIn" ? auth.user.uid : null);
 
   if (auth.status === "loading") {
     return (
