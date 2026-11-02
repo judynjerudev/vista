@@ -50,6 +50,18 @@ jobs:
     needs: checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # A local stand-in for Upstash, the same as compose.yaml: Redis behind
+    # Upstash's REST API emulator. Keep the versions in step with it.
+    services:
+      redis:
+        image: redis:8.6.8-alpine@sha256:f4ed7d6732f9a5dcc6b64e2b347860b9f329334bfd4839a672f78cd981a8bba6
+      redis-http:
+        image: hiett/serverless-redis-http:0.0.10@sha256:65128347949bca511e448fd7238780d624573d74c22b79155a7563db19e9b678
+        ports: ["8079:80"]
+        env:
+          SRH_MODE: env
+          SRH_TOKEN: local-dev-token
+          SRH_CONNECTION_STRING: redis://redis:6379
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -81,5 +93,5 @@ jobs:
           key: firebase-emulators-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: firebase-emulators-${{ runner.os }}-
 
-      - name: Run integration tests against the Firestore emulator
+      - name: Run integration tests against the emulators and Redis
         run: npm run test:integration
