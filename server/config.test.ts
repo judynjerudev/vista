@@ -85,7 +85,7 @@ describe("loadServerConfig", () => {
         FIREBASE_PROJECT_ID: "demo-vista",
         FIREBASE_CLIENT_EMAIL: "",
         FIREBASE_PRIVATE_KEY: " ",
-        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8080",
+        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8085",
       }).credentials,
     ).toBeNull();
   });
@@ -94,7 +94,7 @@ describe("loadServerConfig", () => {
     expect(
       loadServerConfig({
         FIREBASE_PROJECT_ID: "demo-vista",
-        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8080",
+        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8085",
       }),
     ).toEqual({
       projectId: "demo-vista",
@@ -110,7 +110,7 @@ describe("loadServerConfig", () => {
       const error = loadError({
         ...validEnv,
         VERCEL_ENV: vercelEnv,
-        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8080",
+        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8085",
         FIREBASE_AUTH_EMULATOR_HOST: "127.0.0.1:9099",
       });
 
@@ -128,7 +128,7 @@ describe("loadServerConfig", () => {
       loadServerConfig({
         FIREBASE_PROJECT_ID: "demo-vista",
         VERCEL_ENV: "development",
-        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8080",
+        FIRESTORE_EMULATOR_HOST: "127.0.0.1:8085",
         FIREBASE_AUTH_EMULATOR_HOST: "127.0.0.1:9099",
       }).credentials,
     ).toBeNull();
