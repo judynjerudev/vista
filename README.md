@@ -19,6 +19,7 @@ vercel dev
 | `npm test`                 | Run the unit tests once                             |
 | `npm run test:watch`       | Run the unit tests in watch mode                    |
 | `npm run test:integration` | Run the integration tests in the Firestore emulator |
+| `docker compose up -d`     | Start the local Redis used for rate limiting        |
 | `npm run format`           | Format the codebase with Prettier                   |
 
 ## Configuration
@@ -34,6 +35,8 @@ Variables are read from `.env` locally and from the Vercel project settings when
 | `FIREBASE_PRIVATE_KEY`        | The service account's private key, on one line with `\n` for newlines |
 | `FIRESTORE_EMULATOR_HOST`     | Optional. Use the local emulator; the two above are then optional     |
 | `FIREBASE_AUTH_EMULATOR_HOST` | Optional. Verify ID tokens from the local Auth emulator               |
+| `UPSTASH_REDIS_REST_URL`      | The Upstash Redis REST URL, for rate limiting                         |
+| `UPSTASH_REDIS_REST_TOKEN`    | The Upstash Redis REST token                                          |
 
 **Browser** (Vercel type **Config**):
 
@@ -51,7 +54,7 @@ Create the service account key in the Firebase console under Project settings �
 
 `server/config.ts` validates the server variables when a function starts. If any is missing or malformed, the function fails with one error naming every bad variable, for example `Invalid server configuration: FIREBASE_PRIVATE_KEY is required`. Values are never logged. `src/lib/config.ts` does the same for the browser variables and shows an error screen naming them.
 
-Blank values count as not set. The emulator variables are refused in Vercel production and preview deployments: with `FIREBASE_AUTH_EMULATOR_HOST` set, the Admin SDK accepts unsigned tokens, so anyone could act as any user.
+Blank values count as not set. The two Upstash variables are required in production and preview deployments. Locally they're optional: leave both unset to turn rate limiting off, or point them at the local Redis (see [Rate limiting](#rate-limiting)). The emulator variables are refused in Vercel production and preview deployments: with `FIREBASE_AUTH_EMULATOR_HOST` set, the Admin SDK accepts unsigned tokens, so anyone could act as any user.
 
 ## Authentication and access
 
@@ -79,11 +82,41 @@ Deploy the rules after changing them:
 npx firebase deploy --only firestore:rules --project <project-id>
 ```
 
+## Rate limiting
+
+Each signed-in user gets **120 reads (`GET`) and 30 writes a minute**, counted separately, in a sliding window. The limits are in `server/rateLimit/index.ts`.
+
+- **Where it happens:** `methodRouter` requires a rate limiter as well as an authenticator. It checks the limit after authentication, so limits are per user, and requests without a valid token are rejected before they reach Redis.
+- **Responses:** every counted response carries `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset` (seconds until the window resets). Over the limit, the API answers `429 RATE_LIMITED` with a `Retry-After` header, and the app shows the message.
+- **Storage:** counters live in [Upstash](https://upstash.com) Redis, so every function instance sees the same counts. `@upstash/ratelimit` does the counting. It's pinned to 2.0.8: later versions use a Lua flag that only Upstash's servers understand, so the local Redis couldn't run them.
+- **One database for every environment:** keys start with `vista:<VERCEL_ENV>:ratelimit:`, so production, previews and local development never share counters.
+- **If Redis fails:** a check that takes longer than a second, or errors, lets the request through and logs `Rate limit check timed out` or `Rate limit check failed`. An outage of the rate limiter shouldn't take the app down. Search the Vercel logs for those messages if you suspect one.
+- **Not covered:** requests that fail authentication aren't counted. Floods of anonymous traffic are left to Vercel's platform protection.
+
+### Local Redis
+
+Upstash is reached over HTTP. `compose.yaml` runs a plain Redis behind [serverless-redis-http](https://github.com/hiett/serverless-redis-http), which speaks Upstash's REST API, so the same code runs locally without an Upstash account:
+
+```bash
+docker compose up -d
+```
+
+Then set these in `.env` (the token only unlocks this local Redis):
+
+```
+UPSTASH_REDIS_REST_URL=http://127.0.0.1:8079
+UPSTASH_REDIS_REST_TOKEN=local-dev-token
+```
+
+Never put the real Upstash token in a local `.env`: there's one database, shared with production.
+
 ## Integration tests
 
-`npm run test:integration` starts the Firestore and Auth emulators, runs the `*.integration.test.ts` files against them, and stops them. They call the real route handlers with real ID tokens, so they cover sign-in, ownership, and the Firestore queries, transactions and security rules that unit tests fake.
+`npm run test:integration` starts the Firestore and Auth emulators, runs the `*.integration.test.ts` files against them, and stops them. They call the real route handlers with real ID tokens, so they cover sign-in, ownership, rate limiting, and the Firestore queries, transactions and security rules that unit tests fake.
 
-The emulator needs Java 21 or later (for example `brew install openjdk@21` on macOS). It uses the `demo-vista` project ID, which can never reach a real Firebase project, and starts empty each time. CI runs these tests after the unit tests pass.
+Start the local Redis first with `docker compose up -d`.
+
+The emulator needs Java 21 or later (for example `brew install openjdk@21` on macOS). It uses the `demo-vista` project ID, which can never reach a real Firebase project, and starts empty each time. CI runs these tests after the unit tests pass, with the same Redis images as service containers.
 
 ## API errors
 
@@ -106,6 +139,7 @@ Every error response has the same shape:
 | `FORBIDDEN`          | 403    |
 | `NOT_FOUND`          | 404    |
 | `METHOD_NOT_ALLOWED` | 405    |
+| `RATE_LIMITED`       | 429    |
 | `INTERNAL`           | 500    |
 
 `details` only appears on validation errors. Unexpected errors return `INTERNAL` without their cause, which is logged instead.
@@ -131,10 +165,11 @@ server/         Server internals (not deployed as endpoints)
   auth/           ID token verification
   errors.ts       Domain errors (`AppError`)
   http/           Request parsing, responses, method router
+  rateLimit/      Per-user rate limiting (Upstash Redis)
   projects/       Service (business rules) and repository (Firestore)
         │
         ▼
-    Firestore
+    Firestore, Upstash Redis
 
 shared/         Contracts used by both sides: domain model, request schemas, error shape
 ```
