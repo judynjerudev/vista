@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   ApiError,
+  getErrorMessage,
   http,
   setTokenProvider,
   setUnauthorizedHandler,
@@ -174,5 +175,25 @@ describe("http", () => {
 
     await expect(http("/api/projects")).rejects.toBeInstanceOf(ApiError);
     expect(onUnauthorized).toHaveBeenCalledOnce();
+  });
+});
+
+describe("getErrorMessage", () => {
+  it("uses the API's message", () => {
+    const error = new ApiError(
+      429,
+      "RATE_LIMITED",
+      "Too many requests. Try again in 12 seconds.",
+    );
+
+    expect(getErrorMessage(error, "Couldn't save")).toBe(
+      "Too many requests. Try again in 12 seconds.",
+    );
+  });
+
+  it("falls back for anything else, such as a network failure", () => {
+    expect(
+      getErrorMessage(new TypeError("Failed to fetch"), "Couldn't save"),
+    ).toBe("Couldn't save");
   });
 });

@@ -6,7 +6,7 @@ import type {
   UpdateProjectRequest,
 } from "@shared/projects/contracts";
 
-import { ApiError } from "@/lib/http";
+import { getErrorMessage } from "@/lib/http";
 import { projectsApi } from "./api";
 
 type UseProjects = {
@@ -31,9 +31,7 @@ export const useProjects = (): UseProjects => {
       const data = await projectsApi.list();
       setProjects(data);
     } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : "Failed to load projects";
-      setError(message);
+      setError(getErrorMessage(err, "Failed to load projects"));
     } finally {
       setLoading(false);
     }

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import { getErrorMessage } from "@/lib/http";
 
 export type ProjectFormData = {
   name: string;
@@ -23,7 +24,7 @@ export type ProjectFormData = {
 
 type ProjectFormProps = {
   project?: Project;
-  onSubmit: (formData: ProjectFormData) => void;
+  onSubmit: (formData: ProjectFormData) => Promise<void>;
   onCancel: () => void;
 };
 
@@ -60,10 +61,12 @@ export const ProjectForm = ({
     toCalendarDate(project?.dueDate) ?? "",
   );
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
+    setError(null);
     try {
       await onSubmit({
         name,
@@ -72,6 +75,9 @@ export const ProjectForm = ({
         priority,
         dueDate: dueDate || null,
       });
+    } catch (err) {
+      // The form stays open with what was typed, so it can be sent again.
+      setError(getErrorMessage(err, "Couldn't save the project. Try again."));
     } finally {
       setSubmitting(false);
     }
@@ -147,6 +153,12 @@ export const ProjectForm = ({
               }}
             />
           </div>
+
+          {error && (
+            <p role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
 
           <div className="flex justify-end gap-3 pt-small">
             <Button

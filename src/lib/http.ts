@@ -46,6 +46,13 @@ const toApiError = async (response: Response): Promise<ApiError> => {
   );
 };
 
+// What to show a user when a request fails. The API's messages are written
+// for users, e.g. "Too many requests. Try again in 12 seconds.", so they're
+// shown as they are; anything else gets the caller's fallback.
+export const getErrorMessage = (error: unknown, fallback: string): string => {
+  return error instanceof ApiError ? error.message : fallback;
+};
+
 type TokenProvider = () => Promise<string | null>;
 
 const noToken: TokenProvider = async () => {

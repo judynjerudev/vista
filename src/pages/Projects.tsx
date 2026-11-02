@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Button } from "@/components/ui/Button";
 import type { Project } from "@/features/projects";
 import {
@@ -6,6 +8,7 @@ import {
   useProjectForm,
   useProjects,
 } from "@/features/projects";
+import { getErrorMessage } from "@/lib/http";
 
 export const Projects = () => {
   const {
@@ -18,12 +21,20 @@ export const Projects = () => {
   } = useProjects();
   const { formOpen, editingProject, openCreateForm, openEditForm, closeForm } =
     useProjectForm();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDelete = async (project: Project) => {
     if (!confirm(`Delete "${project.name}"?`)) {
       return;
     }
-    await deleteProject(project.uuid);
+    setDeleteError(null);
+    try {
+      await deleteProject(project.uuid);
+    } catch (err) {
+      setDeleteError(
+        getErrorMessage(err, `Couldn't delete "${project.name}". Try again.`),
+      );
+    }
   };
 
   return (
@@ -34,6 +45,11 @@ export const Projects = () => {
       </div>
       {loading && <p className="text-sm text-gray-500">Loading projects...</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {deleteError && (
+        <p role="alert" className="text-sm text-red-600">
+          {deleteError}
+        </p>
+      )}
       {!loading && !error && (
         <ProjectsTable
           projects={projects}
