@@ -36,7 +36,19 @@ const serverEnvSchema = z.object({
       ),
   ),
   FIRESTORE_EMULATOR_HOST: optional(z.string().trim()),
+  UPSTASH_REDIS_REST_URL: optional(
+    z
+      .string()
+      .trim()
+      .pipe(z.url({ protocol: /^https?$/, error: "must be an http(s) URL" })),
+  ),
+  UPSTASH_REDIS_REST_TOKEN: optional(z.string().trim()),
+  VERCEL_ENV: optional(z.string().trim()),
 });
+
+const isDeployment = (env: Record<string, string | undefined>): boolean => {
+  return env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview";
+};
 
 const credentialVariables = [
   "FIREBASE_CLIENT_EMAIL",
@@ -70,7 +82,7 @@ const emulatorVariables = [
 const findEmulatorsInDeployment = (
   env: Record<string, string | undefined>,
 ): string[] => {
-  if (env.VERCEL_ENV !== "production" && env.VERCEL_ENV !== "preview") {
+  if (!isDeployment(env)) {
     return [];
   }
   return emulatorVariables
@@ -82,16 +94,46 @@ const findEmulatorsInDeployment = (
     });
 };
 
+const redisVariables = [
+  "UPSTASH_REDIS_REST_URL",
+  "UPSTASH_REDIS_REST_TOKEN",
+] as const;
+
+// Deployments must rate-limit, so both variables are required there. Locally
+// they're optional, but one without the other is a mistake.
+const findMissingRedisVariables = (
+  env: Record<string, string | undefined>,
+): string[] => {
+  const missing = redisVariables.filter((name) => {
+    return !env[name]?.trim();
+  });
+  if (missing.length === redisVariables.length && !isDeployment(env)) {
+    return [];
+  }
+  return missing.map((name) => {
+    return `${name} is required`;
+  });
+};
+
 export type FirebaseCredentials = {
   projectId: string;
   clientEmail: string;
   privateKey: string;
 };
 
+export type RedisCredentials = {
+  url: string;
+  token: string;
+};
+
 export type ServerConfig = {
   projectId: string;
   // `null` only when running against the Firestore emulator.
   credentials: FirebaseCredentials | null;
+  // `null` only outside deployments, when rate limiting is turned off.
+  redis: RedisCredentials | null;
+  // Vercel's environment name, or "development" when run elsewhere.
+  environment: string;
 };
 
 export class ConfigError extends Error {
@@ -113,6 +155,7 @@ export const loadServerConfig = (
       }),
       ...findMissingCredentials(env),
       ...findEmulatorsInDeployment(env),
+      ...findMissingRedisVariables(env),
     ]),
   ];
 
@@ -124,11 +167,16 @@ export const loadServerConfig = (
     FIREBASE_PROJECT_ID: projectId,
     FIREBASE_CLIENT_EMAIL: clientEmail,
     FIREBASE_PRIVATE_KEY: privateKey,
+    UPSTASH_REDIS_REST_URL: redisUrl,
+    UPSTASH_REDIS_REST_TOKEN: redisToken,
+    VERCEL_ENV: environment = "development",
   } = result.data;
 
   return {
     projectId,
     credentials:
       clientEmail && privateKey ? { projectId, clientEmail, privateKey } : null,
+    redis: redisUrl && redisToken ? { url: redisUrl, token: redisToken } : null,
+    environment,
   };
 };
