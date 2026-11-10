@@ -87,6 +87,7 @@ describe("project hooks", () => {
     await waitFor(() => {
       expect(result.current.data).toEqual([launch, audit]);
     });
+    expect(projectsApi.list).toHaveBeenCalledWith(expect.any(AbortSignal));
   });
 
   it("shares one request between every component that needs the list", async () => {

@@ -26,7 +26,9 @@ export const projectQueries = {
   list: () => {
     return queryOptions({
       queryKey: [...projectQueries.all(), "list"] as const,
-      queryFn: projectsApi.list,
+      queryFn: ({ signal }) => {
+        return projectsApi.list(signal);
+      },
     });
   },
 };

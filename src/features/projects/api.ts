@@ -9,8 +9,8 @@ import { http } from "@/lib/http";
 const projectsPath = "/api/projects";
 
 export const projectsApi = {
-  list: (): Promise<ProjectResponse[]> => {
-    return http<ProjectResponse[]>(projectsPath);
+  list: (signal?: AbortSignal): Promise<ProjectResponse[]> => {
+    return http<ProjectResponse[]>(projectsPath, { signal });
   },
 
   create: (body: CreateProjectRequest): Promise<ProjectResponse> => {
