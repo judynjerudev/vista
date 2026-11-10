@@ -16,8 +16,6 @@ import { AppError } from "../errors.js";
 import { logError } from "../logger.js";
 import type { ProjectRepository } from "./projectRepository.js";
 
-// What a stored document must look like. Older documents may hold a
-// timestamp due date, so it is normalized rather than rejected.
 const storedProjectSchema = z.object({
   name: z.string(),
   description: z.string(),
@@ -31,8 +29,6 @@ const storedProjectSchema = z.object({
   updatedAt: z.string(),
 });
 
-// Returns `null` for a document that doesn't match, after logging which
-// fields are wrong. Field values are never logged.
 export const toProject = (snapshot: DocumentSnapshot): Project | null => {
   const result = storedProjectSchema.safeParse(snapshot.data());
 
@@ -55,8 +51,6 @@ const readProject = (snapshot: DocumentSnapshot): Project => {
   return project;
 };
 
-// Checked on the raw document, before validation, so a corrupt project owned
-// by someone else is "not found" rather than an error that reveals it exists.
 const isOwnedBy = (snapshot: DocumentSnapshot, ownerUuid: string): boolean => {
   return snapshot.exists && snapshot.get("ownerUuid") === ownerUuid;
 };
@@ -79,7 +73,6 @@ export const createFirestoreProjectRepository = (
 
       const snapshot = await q.get();
 
-      // One corrupt document shouldn't hide every other project.
       return snapshot.docs.flatMap((d) => {
         return toProject(d) ?? [];
       });
@@ -98,8 +91,6 @@ export const createFirestoreProjectRepository = (
       return { uuid: ref.id, ...data };
     },
 
-    // The read and the write run in one transaction, so a concurrent delete
-    // can't slip in between the existence check and the write.
     update: (uuid, ownerUuid, changes) => {
       return db.runTransaction(async (transaction) => {
         const ref = projectsRef.doc(uuid);

@@ -28,8 +28,6 @@ export type RouteHandler = (
 type RouteHandlers = Partial<Record<HttpMethod, RouteHandler>>;
 
 type RouterOptions = {
-  // Both required, so a new route can't forget to authenticate or
-  // rate-limit its callers.
   authenticate: Authenticator;
   rateLimit: RateLimiter;
 };
@@ -42,8 +40,6 @@ const secondsUntil = (timestamp: number): number => {
   return Math.max(0, Math.ceil((timestamp - Date.now()) / 1000));
 };
 
-// The RateLimit-* headers from the IETF draft that most APIs send, so
-// clients can slow down before they hit the limit.
 const setRateLimitHeaders = (
   response: VercelResponse,
   { limit, remaining, resetAt }: RateLimitResult,
@@ -95,8 +91,6 @@ const route = async (
   }
 
   try {
-    // After authentication, so limits are per user, and requests without a
-    // valid token are turned away before they reach Redis.
     const user = await options.authenticate(request);
     await enforceRateLimit(options.rateLimit, method, user, response);
     await handle(request, response, { requestId, user });
@@ -110,8 +104,6 @@ export const methodRouter = (
   options: RouterOptions,
 ) => {
   return (request: VercelRequest, response: VercelResponse): Promise<void> => {
-    // Sent back to the client and tagged on every log line, so a reported
-    // failure can be matched to its logs.
     const requestId = randomUUID();
     response.setHeader("x-request-id", requestId);
     response.setHeader("Cache-Control", "private, no-store");

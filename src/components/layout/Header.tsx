@@ -32,8 +32,6 @@ const getInitials = ({ displayName, email }: HeaderUser): string => {
 export const Header = ({ title, user, onSignOut }: HeaderProps) => {
   const [signOutFailed, setSignOutFailed] = useState(false);
 
-  // If sign-out fails the user is still signed in, so say so rather than
-  // pretending otherwise.
   const handleSignOut = async () => {
     setSignOutFailed(false);
     try {

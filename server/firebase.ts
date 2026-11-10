@@ -10,8 +10,6 @@ const getApp = (): App => {
     return existingApp;
   }
 
-  // Without credentials the SDK talks to the emulator in
-  // `FIRESTORE_EMULATOR_HOST`, which the config requires in that case.
   return initializeApp({
     projectId: serverConfig.projectId,
     ...(serverConfig.credentials && {

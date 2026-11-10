@@ -20,7 +20,6 @@ const rules: Record<RateLimitKind, RateLimitRule> = {
   write: { requests: 1, window: "1 m" },
 };
 
-// A fresh prefix per limiter, so tests never share counters.
 const createLimiter = (store = redis, timeoutMs = 1000) => {
   return createUpstashRateLimiter(store, {
     prefix: `vista:test:${randomUUID()}`,
@@ -29,7 +28,6 @@ const createLimiter = (store = redis, timeoutMs = 1000) => {
   });
 };
 
-// Stands in for Redis being unreachable (`respond` never called) or failing.
 const startFakeRedis = async (
   respond: (response: ServerResponse) => void,
 ): Promise<{ store: Redis; server: Server }> => {

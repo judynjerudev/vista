@@ -11,11 +11,8 @@ export type RateLimitRule = {
 };
 
 type UpstashRateLimiterOptions = {
-  // Starts every Redis key, so several apps or environments can share one
-  // database without sharing counters.
   prefix: string;
   rules: Record<RateLimitKind, RateLimitRule>;
-  // How long to wait for Redis before letting the request through.
   timeoutMs: number;
 };
 
@@ -23,14 +20,10 @@ export const createUpstashRateLimiter = (
   redis: Redis,
   { prefix, rules, timeoutMs }: UpstashRateLimiterOptions,
 ): RateLimiter => {
-  // Created once per function instance, so the in-memory cache of users
-  // who are over their limit is kept between requests.
   const createLimiter = (kind: RateLimitKind): Ratelimit => {
     const { requests, window } = rules[kind];
     return new Ratelimit({
       redis,
-      // A sliding window has no reset moment to time a burst around, unlike
-      // a fixed window.
       limiter: Ratelimit.slidingWindow(requests, window),
       prefix: `${prefix}:${kind}`,
       timeout: timeoutMs,
@@ -41,9 +34,6 @@ export const createUpstashRateLimiter = (
     write: createLimiter("write"),
   };
 
-  // If Redis is down or slow, the request is allowed: a Redis outage
-  // shouldn't take the app down with it. It's logged, so it doesn't go
-  // unnoticed.
   return async (kind, key) => {
     try {
       const { success, limit, remaining, reset, reason } =

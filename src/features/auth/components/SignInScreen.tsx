@@ -35,7 +35,6 @@ const ErrorMessage = ({ message }: { message: string | null }) => {
   );
 };
 
-// Runs a sign-in action, tracking whether it's in progress and its error.
 const useSignInAction = () => {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);

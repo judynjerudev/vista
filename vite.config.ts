@@ -12,7 +12,6 @@ export default defineConfig({
     },
   },
   test: {
-    // Integration tests need the Firestore emulator: `npm run test:integration`.
     exclude: [...configDefaults.exclude, '**/*.integration.test.ts'],
   },
 })

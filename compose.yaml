@@ -1,6 +1,3 @@
-# A local stand-in for Upstash, for rate limiting in development and in the
-# integration tests: `docker compose up -d`. Upstash is reached over HTTP,
-# so Redis sits behind Upstash's REST API emulator (serverless-redis-http).
 # CI runs the same two images; keep the versions in step with ci.yml.
 services:
   redis:
@@ -9,10 +6,8 @@ services:
   redis-http:
     image: hiett/serverless-redis-http:0.0.10@sha256:65128347949bca511e448fd7238780d624573d74c22b79155a7563db19e9b678
     depends_on: [redis]
-    # Only reachable from this machine.
     ports: ["127.0.0.1:8079:80"]
     environment:
       SRH_MODE: env
-      # Not a secret: it only unlocks this local Redis.
       SRH_TOKEN: local-dev-token
       SRH_CONNECTION_STRING: redis://redis:6379

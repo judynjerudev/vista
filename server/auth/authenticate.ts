@@ -7,7 +7,6 @@ export type AuthUser = {
   email: string;
 };
 
-// The claims we use from a verified Firebase ID token.
 export type VerifiedToken = {
   uid: string;
   email?: string;
@@ -19,9 +18,6 @@ export type Authenticator = (request: VercelRequest) => Promise<AuthUser>;
 
 const bearerPattern = /^Bearer ([^\s]+)$/i;
 
-// Errors the Admin SDK raises for a bad token (expired, malformed, revoked,
-// wrong project). Anything else, such as failing to fetch Google's signing
-// keys, is a server problem rather than the user's.
 const isTokenError = (error: unknown): boolean => {
   const code = (error as { code?: unknown } | null)?.code;
   return typeof code === "string" && code.startsWith("auth/");
@@ -47,8 +43,6 @@ export const createAuthenticator = (verify: TokenVerifier): Authenticator => {
       throw error;
     }
 
-    // Google and email-link accounts are always verified. This guards against
-    // a weaker sign-in method being enabled by mistake.
     if (!token.email || token.email_verified !== true) {
       throw new AppError("FORBIDDEN", "A verified email address is required");
     }

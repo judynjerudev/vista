@@ -4,8 +4,6 @@ import { calendarDateSchema } from "../calendarDate.js";
 import type { Project } from "./model.js";
 import { projectPriorities, projectStatuses } from "./model.js";
 
-// The owner isn't here: the server sets it from the signed-in user, and any
-// `ownerUuid` a client sends is dropped.
 const projectFieldsSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
@@ -18,7 +16,6 @@ export const createProjectSchema = projectFieldsSchema.extend({
   dueDate: projectFieldsSchema.shape.dueDate.default(null),
 });
 
-// No defaults here: a field missing from an update must stay unchanged.
 export const updateProjectSchema = projectFieldsSchema.partial();
 
 export const projectFiltersSchema = z.object({

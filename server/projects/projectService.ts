@@ -8,9 +8,6 @@ import type { AuthUser } from "../auth/authenticate.js";
 import { notFound } from "../errors.js";
 import type { ProjectRepository } from "./projectRepository.js";
 
-// Every method acts for a signed-in user, who only ever sees their own
-// projects. Someone else's project is reported as not found rather than
-// forbidden, so its ID can't be used to probe whether it exists.
 export type ProjectService = {
   list: (actor: AuthUser, filters?: ProjectFilters) => Promise<Project[]>;
   get: (actor: AuthUser, uuid: string) => Promise<Project>;

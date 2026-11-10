@@ -40,7 +40,6 @@ export const sendError = (res: VercelResponse, error: unknown): void => {
     return;
   }
 
-  // Unexpected errors are logged in full but never sent to the client.
   logError("Unhandled error:", error);
   res
     .status(500)

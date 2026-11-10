@@ -14,7 +14,6 @@ export type ErrorDetail = {
   message: string;
 };
 
-// The body of every error response from the API.
 export type ErrorResponse = {
   error: {
     code: ErrorCode;

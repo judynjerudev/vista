@@ -37,8 +37,6 @@ const clearUsers = async (): Promise<void> => {
   expect(response.ok).toBe(true);
 };
 
-// Creates a user in the Auth emulator and returns a real ID token for it.
-// The emulator accepts any API key.
 const signIn = async (
   email: string,
   { emailVerified = true } = {},
@@ -309,8 +307,6 @@ describe("Firestore security rules", () => {
     await clearDatabase();
   });
 
-  // Requests without the emulator's admin token are evaluated against
-  // `firestore.rules`, as browser requests would be in production.
   it("deny reading projects directly", async () => {
     const { uuid } = await createProject();
 

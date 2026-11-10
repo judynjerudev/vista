@@ -4,9 +4,6 @@ const required = (): z.ZodString => {
   return z.string({ error: "is required" }).trim().min(1, "is required");
 };
 
-// `VAR=` in a .env file or a blank value in Vercel arrives as "", which means
-// "not set" here. Whether a missing credential is a problem is decided by
-// `findMissingCredentials`, which knows about the emulator.
 const optional = <T extends z.ZodType>(schema: T) => {
   return z.preprocess((value) => {
     return typeof value === "string" && value.trim() === "" ? undefined : value;
@@ -24,7 +21,6 @@ const serverEnvSchema = z.object({
   FIREBASE_PRIVATE_KEY: optional(
     z
       .string()
-      // Vercel and .env files store the key on one line with escaped newlines.
       .transform((key) => {
         return key.replace(/\\n/g, "\n");
       })
@@ -55,7 +51,6 @@ const credentialVariables = [
   "FIREBASE_PRIVATE_KEY",
 ] as const;
 
-// The emulator needs no credentials; everywhere else they are required.
 const findMissingCredentials = (
   env: Record<string, string | undefined>,
 ): string[] => {
@@ -76,9 +71,6 @@ const emulatorVariables = [
   "FIREBASE_AUTH_EMULATOR_HOST",
 ] as const;
 
-// With `FIREBASE_AUTH_EMULATOR_HOST` set, the Admin SDK accepts unsigned ID
-// tokens, so anyone could act as any user. Deployments use the real Firebase
-// project, so emulator variables there are always a mistake.
 const findEmulatorsInDeployment = (
   env: Record<string, string | undefined>,
 ): string[] => {
@@ -99,8 +91,6 @@ const redisVariables = [
   "UPSTASH_REDIS_REST_TOKEN",
 ] as const;
 
-// Deployments must rate-limit, so both variables are required there. Locally
-// they're optional, but one without the other is a mistake.
 const findMissingRedisVariables = (
   env: Record<string, string | undefined>,
 ): string[] => {
@@ -128,11 +118,8 @@ export type RedisCredentials = {
 
 export type ServerConfig = {
   projectId: string;
-  // `null` only when running against the Firestore emulator.
   credentials: FirebaseCredentials | null;
-  // `null` only outside deployments, when rate limiting is turned off.
   redis: RedisCredentials | null;
-  // Vercel's environment name, or "development" when run elsewhere.
   environment: string;
 };
 
@@ -147,7 +134,6 @@ export const loadServerConfig = (
   env: Record<string, string | undefined>,
 ): ServerConfig => {
   const result = serverEnvSchema.safeParse(env);
-  // Only variable names reach the message, never their values.
   const problems = [
     ...new Set([
       ...(result.error?.issues ?? []).map((issue) => {

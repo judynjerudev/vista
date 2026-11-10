@@ -20,8 +20,6 @@ export const parseBody = <T>(request: VercelRequest, schema: ZodType<T>): T => {
   return parse(schema, request.body);
 };
 
-// Each parameter may appear once: `?status=A&status=B` is rejected rather
-// than silently picking one of the values.
 export const parseQuery = <T>(
   request: VercelRequest,
   schema: ZodType<T>,
@@ -42,8 +40,6 @@ export const parseQuery = <T>(
 
 const maxRouteParamLength = 128;
 
-// Route parameters are used as Firestore document IDs, which can't contain
-// `/` or be `.` or `..`.
 export const getRouteParam = (request: VercelRequest, name: string): string => {
   const value = request.query[name];
 

@@ -1,7 +1,5 @@
 import { FirebaseError } from "firebase/app";
 
-// Firebase error codes the user can act on. Anything else gets a generic
-// message; the details go to the console.
 const messagesByCode: Record<string, string> = {
   "auth/popup-blocked":
     "Your browser blocked the sign-in window. Allow pop-ups and try again.",
@@ -21,7 +19,6 @@ const messagesByCode: Record<string, string> = {
     "Too many sign-in emails were sent today. Try again tomorrow or use Google.",
 };
 
-// The link itself is unusable, so asking for the email again won't help.
 export const isUnusableLinkError = (error: unknown): boolean => {
   return (
     error instanceof FirebaseError &&
@@ -30,7 +27,6 @@ export const isUnusableLinkError = (error: unknown): boolean => {
   );
 };
 
-// The user closed the window or started another sign-in; nothing to report.
 const cancelledCodes = new Set([
   "auth/popup-closed-by-user",
   "auth/cancelled-popup-request",

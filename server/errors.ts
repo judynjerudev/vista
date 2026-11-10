@@ -1,6 +1,5 @@
 import type { ErrorCode, ErrorDetail } from "../shared/http/errors.js";
 
-// Says *what* went wrong; the HTTP layer decides which status code that is.
 export class AppError extends Error {
   constructor(
     public readonly code: ErrorCode,

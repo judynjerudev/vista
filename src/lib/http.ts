@@ -36,8 +36,6 @@ const toApiError = async (response: Response): Promise<ApiError> => {
     });
   }
 
-  // Not one of our error responses, e.g. the platform failing before the
-  // function ran.
   return new ApiError(
     response.status,
     "INTERNAL",
@@ -46,9 +44,6 @@ const toApiError = async (response: Response): Promise<ApiError> => {
   );
 };
 
-// What to show a user when a request fails. The API's messages are written
-// for users, e.g. "Too many requests. Try again in 12 seconds.", so they're
-// shown as they are; anything else gets the caller's fallback.
 export const getErrorMessage = (error: unknown, fallback: string): string => {
   return error instanceof ApiError ? error.message : fallback;
 };
@@ -63,8 +58,6 @@ const ignoreUnauthorized = (): void => {};
 let getToken = noToken;
 let onUnauthorized = ignoreUnauthorized;
 
-// Registered by the auth feature, so `lib/` never imports a feature. Each
-// returns a function that unregisters it, unless something newer replaced it.
 export const setTokenProvider = (provider: TokenProvider): (() => void) => {
   getToken = provider;
   return () => {
@@ -88,8 +81,6 @@ export const http = async <T>(
   options?: RequestInit,
 ): Promise<T> => {
   const headers = new Headers(options?.headers);
-  // Only requests with a body have content to describe. A caller's own
-  // Content-Type wins.
   if (options?.body !== undefined && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }

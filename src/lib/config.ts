@@ -4,16 +4,12 @@ const required = (): z.ZodString => {
   return z.string({ error: "is required" }).trim().min(1, "is required");
 };
 
-// `VAR=` in a .env file reaches the app as "", which means "not set" here.
 const optional = () => {
   return z.preprocess((value) => {
     return typeof value === "string" && value.trim() === "" ? undefined : value;
   }, z.string().trim().optional());
 };
 
-// The Firebase web config is public by design: it identifies the project to
-// the browser SDK and is protected by API key restrictions and server-side
-// checks, not by being secret.
 const browserEnvSchema = z.object({
   VITE_FIREBASE_API_KEY: required(),
   VITE_FIREBASE_AUTH_DOMAIN: required(),
@@ -31,7 +27,6 @@ export type FirebaseWebConfig = {
 
 export type BrowserConfig = {
   firebase: FirebaseWebConfig;
-  // Set to use the local Auth emulator instead of real Firebase Auth.
   authEmulatorHost: string | null;
 };
 

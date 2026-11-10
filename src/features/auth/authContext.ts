@@ -9,7 +9,6 @@ export type AuthUser = {
 export type AuthState =
   | { status: "loading" }
   | { status: "signedOut"; notice: string | null }
-  // A sign-in link was opened on a device that didn't request it.
   | { status: "confirmEmail" }
   | { status: "signedIn"; user: AuthUser };
 

@@ -1,8 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// A minimal stand-in for Vercel's request and response, for testing route
-// handlers without a server.
-
 export type RecordedResponse = {
   statusCode: number;
   headers: Record<string, string>;

@@ -6,7 +6,6 @@ import type { BrowserConfig } from "@/lib/config";
 
 let auth: Auth | null = null;
 
-// One Auth instance for the app's lifetime, however often React re-renders.
 export const getFirebaseAuth = (config: BrowserConfig): Auth => {
   if (auth) {
     return auth;

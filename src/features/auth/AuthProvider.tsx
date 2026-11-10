@@ -42,25 +42,18 @@ type AuthProviderProps = {
 export const AuthProvider = ({ config, children }: AuthProviderProps) => {
   const auth = getFirebaseAuth(config);
   const [state, setState] = useState<AuthState>(() => {
-    // A sign-in link opened without a saved email needs the email retyped.
     const needsEmail =
       isSignInWithEmailLink(auth, window.location.href) &&
       !readEmailForSignIn();
     return needsEmail ? { status: "confirmEmail" } : { status: "loading" };
   });
-  // While a sign-in link is being used, "no user yet" doesn't mean signed out.
   const completingLink = useRef(false);
-  // The link's code works once; StrictMode runs effects twice in development.
   const handledLink = useRef(false);
 
   useEffect(() => {
-    // Every API request carries a fresh ID token. The SDK refreshes it
-    // before it expires.
     const unregisterTokenProvider = setTokenProvider(async () => {
       return (await auth.currentUser?.getIdToken()) ?? null;
     });
-    // The server has already rejected the token, so the user is signed out
-    // either way: show the sign-in screen even if local sign-out fails.
     const unregisterUnauthorizedHandler = setUnauthorizedHandler(() => {
       void firebaseSignOut(auth)
         .catch((error: unknown) => {
@@ -79,7 +72,6 @@ export const AuthProvider = ({ config, children }: AuthProviderProps) => {
         if (completingLink.current || previous.status === "confirmEmail") {
           return previous;
         }
-        // Keep a "session expired" notice when the sign-out caused it.
         const notice = previous.status === "signedOut" ? previous.notice : null;
         return { status: "signedOut", notice };
       });
@@ -92,8 +84,6 @@ export const AuthProvider = ({ config, children }: AuthProviderProps) => {
     };
   }, [auth]);
 
-  // Opening a sign-in link on the device that requested it signs in straight
-  // away, using the saved email.
   useEffect(() => {
     const link = window.location.href;
     const email = readEmailForSignIn();
@@ -127,7 +117,6 @@ export const AuthProvider = ({ config, children }: AuthProviderProps) => {
 
       sendSignInLink: async (email) => {
         await sendSignInLinkToEmail(auth, email, {
-          // Must be on the Firebase project's list of authorized domains.
           url: `${window.location.origin}/`,
           handleCodeInApp: true,
         });
@@ -148,7 +137,6 @@ export const AuthProvider = ({ config, children }: AuthProviderProps) => {
             });
             return;
           }
-          // e.g. a mistyped email: let the user try again.
           throw error;
         }
       },
@@ -158,8 +146,6 @@ export const AuthProvider = ({ config, children }: AuthProviderProps) => {
         setState({ status: "signedOut", notice: null });
       },
 
-      // Throws if sign-out fails. The session is then still on this device,
-      // so showing the sign-in screen would be misleading.
       signOut: async () => {
         await firebaseSignOut(auth);
         setState({ status: "signedOut", notice: null });
