@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
-import { getErrorMessage } from "@/lib/http";
 
 export type ProjectFormData = {
   name: string;
@@ -24,8 +23,10 @@ export type ProjectFormData = {
 
 type ProjectFormProps = {
   project?: Project;
-  onSubmit: (formData: ProjectFormData) => Promise<void>;
+  onSubmit: (formData: ProjectFormData) => void;
   onCancel: () => void;
+  submitting: boolean;
+  error: string | null;
 };
 
 const projectStatuses = [
@@ -46,6 +47,8 @@ export const ProjectForm = ({
   project,
   onSubmit,
   onCancel,
+  submitting,
+  error,
 }: ProjectFormProps) => {
   const isEditing = !!project;
 
@@ -60,27 +63,15 @@ export const ProjectForm = ({
   const [dueDate, setDueDate] = useState(
     toCalendarDate(project?.dueDate) ?? "",
   );
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    try {
-      await onSubmit({
-        name,
-        description,
-        status,
-        priority,
-        dueDate: dueDate || null,
-      });
-    } catch (err) {
-      // The form stays open with what was typed, so it can be sent again.
-      setError(getErrorMessage(err, "Couldn't save the project. Try again."));
-    } finally {
-      setSubmitting(false);
-    }
+    onSubmit({
+      name,
+      description,
+      status,
+      priority,
+      dueDate: dueDate || null,
+    });
   };
 
   return (

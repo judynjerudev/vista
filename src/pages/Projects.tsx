@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { Button } from "@/components/ui/Button";
 import type { Project } from "@/features/projects";
 import {
@@ -20,20 +18,19 @@ export const Projects = () => {
   const deleteProject = useDeleteProject();
   const { formOpen, editingProject, openCreateForm, openEditForm, closeForm } =
     useProjectForm();
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const saveProject = editingProject ? updateProject : createProject;
 
-  const handleDelete = async (project: Project) => {
+  const closeProjectForm = (): void => {
+    createProject.reset();
+    updateProject.reset();
+    closeForm();
+  };
+
+  const handleDelete = (project: Project): void => {
     if (!confirm(`Delete "${project.name}"?`)) {
       return;
     }
-    setDeleteError(null);
-    try {
-      await deleteProject.mutateAsync(project.uuid);
-    } catch (err) {
-      setDeleteError(
-        getErrorMessage(err, `Couldn't delete "${project.name}". Try again.`),
-      );
-    }
+    deleteProject.mutate(project.uuid);
   };
 
   return (
@@ -50,9 +47,12 @@ export const Projects = () => {
           {getErrorMessage(error, "Failed to load projects")}
         </p>
       )}
-      {deleteError && (
+      {deleteProject.error && (
         <p role="alert" className="text-sm text-red-600">
-          {deleteError}
+          {getErrorMessage(
+            deleteProject.error,
+            "Couldn't delete the project. Try again.",
+          )}
         </p>
       )}
       {projects && (
@@ -67,18 +67,25 @@ export const Projects = () => {
       {formOpen && (
         <ProjectForm
           project={editingProject}
-          onSubmit={async (formData) => {
+          onSubmit={(formData) => {
             if (editingProject) {
-              await updateProject.mutateAsync({
-                uuid: editingProject.uuid,
-                input: formData,
-              });
+              updateProject.mutate(
+                { uuid: editingProject.uuid, input: formData },
+                { onSuccess: closeProjectForm },
+              );
             } else {
-              await createProject.mutateAsync(formData);
+              createProject.mutate(formData, { onSuccess: closeProjectForm });
             }
-            closeForm();
           }}
-          onCancel={closeForm}
+          onCancel={closeProjectForm}
+          submitting={saveProject.isPending}
+          error={
+            saveProject.error &&
+            getErrorMessage(
+              saveProject.error,
+              "Couldn't save the project. Try again.",
+            )
+          }
         />
       )}
     </div>
