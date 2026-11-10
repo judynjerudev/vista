@@ -1,6 +1,15 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { QueryClient, UseMutationResult } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import type {
+  QueryClient,
+  UseMutationResult,
+  UseQueryResult,
+} from "@tanstack/react-query";
 
 import type { Project } from "@shared/projects/model";
 import type {
@@ -8,48 +17,35 @@ import type {
   UpdateProjectRequest,
 } from "@shared/projects/contracts";
 
-import { getErrorMessage } from "@/lib/http";
 import { projectsApi } from "./api";
 
-export const projectKeys = {
-  all: ["projects"] as const,
+export const projectQueries = {
+  all: (): readonly ["projects"] => {
+    return ["projects"] as const;
+  },
   list: () => {
-    return [...projectKeys.all, "list"] as const;
+    return queryOptions({
+      queryKey: [...projectQueries.all(), "list"] as const,
+      queryFn: projectsApi.list,
+    });
   },
 };
 
-const noProjects: Project[] = [];
-
-type UseProjects = {
-  projects: Project[];
-  loading: boolean;
-  error: string | null;
-};
-
-export const useProjects = (): UseProjects => {
-  const { data, isPending, error } = useQuery({
-    queryKey: projectKeys.list(),
-    queryFn: projectsApi.list,
-  });
-
-  return {
-    projects: data ?? noProjects,
-    loading: isPending,
-    error: error ? getErrorMessage(error, "Failed to load projects") : null,
-  };
+export const useProjects = (): UseQueryResult<Project[]> => {
+  return useQuery(projectQueries.list());
 };
 
 const updateCachedList = (
   queryClient: QueryClient,
   update: (projects: Project[]) => Project[],
 ): void => {
-  queryClient.setQueryData<Project[]>(projectKeys.list(), (projects) => {
+  queryClient.setQueryData(projectQueries.list().queryKey, (projects) => {
     return projects && update(projects);
   });
 };
 
 const refreshList = (queryClient: QueryClient): Promise<void> => {
-  return queryClient.invalidateQueries({ queryKey: projectKeys.all });
+  return queryClient.invalidateQueries({ queryKey: projectQueries.all() });
 };
 
 export const useCreateProject = (): UseMutationResult<

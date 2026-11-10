@@ -9,7 +9,7 @@ import type { Project } from "@shared/projects/model";
 import { ApiError } from "@/lib/http";
 import { projectsApi } from "./api";
 import {
-  projectKeys,
+  projectQueries,
   useCreateProject,
   useDeleteProject,
   useProjects,
@@ -79,15 +79,10 @@ describe("project hooks", () => {
   it("loads the projects", async () => {
     const { result } = renderHook(useProjects, { wrapper });
 
-    expect(result.current).toEqual({
-      projects: [],
-      loading: true,
-      error: null,
-    });
+    expect(result.current.isPending).toBe(true);
     await waitFor(() => {
-      expect(result.current.projects).toEqual([launch, audit]);
+      expect(result.current.data).toEqual([launch, audit]);
     });
-    expect(result.current.loading).toBe(false);
   });
 
   it("shares one request between every component that needs the list", async () => {
@@ -99,22 +94,20 @@ describe("project hooks", () => {
     );
 
     await waitFor(() => {
-      expect(result.current[1].projects).toHaveLength(2);
+      expect(result.current[1].data).toHaveLength(2);
     });
     expect(projectsApi.list).toHaveBeenCalledOnce();
   });
 
-  it("shows the API's message when loading fails", async () => {
-    vi.mocked(projectsApi.list).mockRejectedValue(
-      new ApiError(429, "RATE_LIMITED", "Too many requests."),
-    );
+  it("returns the API's error when loading fails", async () => {
+    const rateLimited = new ApiError(429, "RATE_LIMITED", "Too many requests.");
+    vi.mocked(projectsApi.list).mockRejectedValue(rateLimited);
 
     const { result } = renderHook(useProjects, { wrapper });
 
     await waitFor(() => {
-      expect(result.current.error).toBe("Too many requests.");
+      expect(result.current.error).toBe(rateLimited);
     });
-    expect(result.current.loading).toBe(false);
   });
 
   it("adds a created project to the cached list without fetching it again", async () => {
@@ -122,7 +115,7 @@ describe("project hooks", () => {
     vi.mocked(projectsApi.create).mockResolvedValue(created);
     const { result } = renderWithList(useCreateProject);
     await waitFor(() => {
-      expect(result.current.list.loading).toBe(false);
+      expect(result.current.list.isSuccess).toBe(true);
     });
 
     await act(() => {
@@ -136,7 +129,7 @@ describe("project hooks", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.list.projects).toEqual([launch, audit, created]);
+      expect(result.current.list.data).toEqual([launch, audit, created]);
     });
     expect(projectsApi.list).toHaveBeenCalledOnce();
   });
@@ -146,7 +139,7 @@ describe("project hooks", () => {
     vi.mocked(projectsApi.update).mockResolvedValue(renamed);
     const { result } = renderWithList(useUpdateProject);
     await waitFor(() => {
-      expect(result.current.list.loading).toBe(false);
+      expect(result.current.list.isSuccess).toBe(true);
     });
 
     await act(() => {
@@ -160,7 +153,7 @@ describe("project hooks", () => {
       name: "Security audit",
     });
     await waitFor(() => {
-      expect(result.current.list.projects).toEqual([launch, renamed]);
+      expect(result.current.list.data).toEqual([launch, renamed]);
     });
   });
 
@@ -168,7 +161,7 @@ describe("project hooks", () => {
     vi.mocked(projectsApi.remove).mockResolvedValue(undefined);
     const { result } = renderWithList(useDeleteProject);
     await waitFor(() => {
-      expect(result.current.list.loading).toBe(false);
+      expect(result.current.list.isSuccess).toBe(true);
     });
 
     await act(() => {
@@ -176,7 +169,7 @@ describe("project hooks", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.list.projects).toEqual([audit]);
+      expect(result.current.list.data).toEqual([audit]);
     });
   });
 
@@ -186,7 +179,7 @@ describe("project hooks", () => {
     );
     const { result } = renderWithList(useDeleteProject);
     await waitFor(() => {
-      expect(result.current.list.loading).toBe(false);
+      expect(result.current.list.isSuccess).toBe(true);
     });
     vi.mocked(projectsApi.list).mockResolvedValue([audit]);
 
@@ -197,12 +190,12 @@ describe("project hooks", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.list.projects).toEqual([audit]);
+      expect(result.current.list.data).toEqual([audit]);
     });
     expect(projectsApi.list).toHaveBeenCalledTimes(2);
   });
 
   it("keys every projects query under one prefix", () => {
-    expect(projectKeys.list()).toEqual(["projects", "list"]);
+    expect(projectQueries.list().queryKey).toEqual(["projects", "list"]);
   });
 });

@@ -10,7 +10,7 @@ export type {
 
 export { projectsApi } from "./api";
 export {
-  projectKeys,
+  projectQueries,
   useCreateProject,
   useDeleteProject,
   useProjectForm,

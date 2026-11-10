@@ -11,13 +11,15 @@ import {
   StatusDistributionCard,
   useProjects,
 } from "@/features/projects";
+import { getErrorMessage } from "@/lib/http";
 
 type DashboardProps = {
   onNavigateToProjects?: () => void;
 };
 
 export const Dashboard = ({ onNavigateToProjects }: DashboardProps) => {
-  const { projects, loading, error } = useProjects();
+  const { data, isPending, error } = useProjects();
+  const projects = data ?? [];
 
   const activeCount = countProjectsByStatus(projects, "ACTIVE");
   const blockedCount = countProjectsByStatus(projects, "BLOCKED");
@@ -78,11 +80,15 @@ export const Dashboard = ({ onNavigateToProjects }: DashboardProps) => {
             Last 30 days
           </span>
         </div>
-        {loading && (
+        {isPending && (
           <p className="text-sm text-gray-500">Loading projects...</p>
         )}
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {!loading && !error && recentProjects.length === 0 && (
+        {error && (
+          <p className="text-sm text-red-600">
+            {getErrorMessage(error, "Failed to load projects")}
+          </p>
+        )}
+        {!isPending && !error && recentProjects.length === 0 && (
           <div className="rounded-2xl border border-dashed border-black/[0.1] px-8 py-14 text-center">
             <p className="text-sm font-semibold text-gray-500">
               No new projects this month
@@ -92,7 +98,7 @@ export const Dashboard = ({ onNavigateToProjects }: DashboardProps) => {
             </p>
           </div>
         )}
-        {!loading && !error && recentProjects.length > 0 && (
+        {!isPending && !error && recentProjects.length > 0 && (
           <ProjectsTable projects={recentProjects} />
         )}
       </div>

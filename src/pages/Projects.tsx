@@ -14,7 +14,7 @@ import {
 import { getErrorMessage } from "@/lib/http";
 
 export const Projects = () => {
-  const { projects, loading, error } = useProjects();
+  const { data: projects, isPending, error } = useProjects();
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
@@ -42,14 +42,20 @@ export const Projects = () => {
         <h2 className="text-lg font-semibold text-gray-900">All Projects</h2>
         <Button variant="primary" text="Add Project" onClick={openCreateForm} />
       </div>
-      {loading && <p className="text-sm text-gray-500">Loading projects...</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {isPending && (
+        <p className="text-sm text-gray-500">Loading projects...</p>
+      )}
+      {error && (
+        <p className="text-sm text-red-600">
+          {getErrorMessage(error, "Failed to load projects")}
+        </p>
+      )}
       {deleteError && (
         <p role="alert" className="text-sm text-red-600">
           {deleteError}
         </p>
       )}
-      {!loading && !error && (
+      {projects && (
         <ProjectsTable
           projects={projects}
           onAdd={openCreateForm}
