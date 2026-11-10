@@ -87,11 +87,14 @@ npx firebase deploy --only firestore:rules --project <project-id>
 The browser keeps fetched data in memory with [TanStack Query](https://tanstack.com/query). The API never lets anything else store it.
 
 - **One shared cache:** `src/main.tsx` creates a single `QueryClient` (`src/lib/queryClient.ts`) for the whole app. The overview and the Projects page use the same `useProjects` query, so they share one list and one request.
+- **Query options:** `projectQueries` in `src/features/projects/hooks.ts` defines each query's key and fetch function together with `queryOptions`. Keys start with `"projects"`, so one call can refresh every projects query.
 - **Freshness:** data counts as fresh for 30 seconds. Within that time, switching pages shows the cache without a request. After it, the cache is shown straight away and refreshed in the background, including when you return to the tab.
-- **Writes:** `useCreateProject`, `useUpdateProject` and `useDeleteProject` put the saved project from the API's response into the cached list, so no extra request is needed. If a write fails, the list is fetched again in case it's out of date.
+- **Writes:** `useCreateProject`, `useUpdateProject` and `useDeleteProject` refresh the projects list from the server when they finish, whether they succeed or fail. A save stays pending until the fresh list has arrived, so the form closes on up-to-date data. The page calls `mutate` and reads `isPending` and `error` from the mutation instead of keeping its own state.
+- **Cancellation:** the list request gets TanStack Query's `AbortSignal`, so it's cancelled when nothing needs it any more.
 - **Retries:** failed reads are retried twice for network and server errors only. A `4xx` would fail again, and retrying a `429` would only use up more of the rate limit.
 - **Sign-out:** `useClearCacheOnUserChange` clears the cache when the user signs out, their session expires, or a different user signs in.
 - **The API's side:** every response has `Cache-Control: private, no-store`, so browsers, CDNs and proxies don't keep copies of one user's data.
+- **Devtools:** in development, the TanStack Query Devtools button in the corner shows every query, its key and its state. Production builds leave it out.
 
 ## Rate limiting
 
