@@ -6,10 +6,10 @@ export const useClearCacheOnUserChange = (userId: string | null): void => {
   const previousUserId = useRef(userId);
 
   useEffect(() => {
-    if (previousUserId.current === userId) {
-      return;
-    }
+    const previous = previousUserId.current;
     previousUserId.current = userId;
-    queryClient.clear();
+    if (previous !== null && previous !== userId) {
+      queryClient.clear();
+    }
   }, [queryClient, userId]);
 };
