@@ -18,6 +18,9 @@ export const createQueryClient = (): QueryClient => {
         staleTime: 30_000,
         retry: shouldRetry,
       },
+      mutations: {
+        networkMode: "always",
+      },
     },
   });
 };

@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { MutationObserver, onlineManager } from "@tanstack/react-query";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "./http";
 import { createQueryClient, shouldRetry } from "./queryClient";
@@ -26,10 +27,25 @@ describe("shouldRetry", () => {
 });
 
 describe("createQueryClient", () => {
+  afterEach(() => {
+    onlineManager.setOnline(true);
+  });
+
   it("uses the retry rule and keeps data fresh for 30 seconds", () => {
     const { queries } = createQueryClient().getDefaultOptions();
 
     expect(queries?.retry).toBe(shouldRetry);
     expect(queries?.staleTime).toBe(30_000);
+  });
+
+  it("sends a save while offline, so it fails instead of waiting", async () => {
+    onlineManager.setOnline(false);
+    const mutationFn = vi
+      .fn()
+      .mockRejectedValue(new TypeError("Failed to fetch"));
+    const observer = new MutationObserver(createQueryClient(), { mutationFn });
+
+    await expect(observer.mutate(undefined)).rejects.toThrow("Failed to fetch");
+    expect(mutationFn).toHaveBeenCalledOnce();
   });
 });
