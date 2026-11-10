@@ -53,13 +53,17 @@ const wrapper = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const renderWithList = <T,>(useHook: () => T) => {
-  return renderHook(
+const renderWithLoadedList = async <T,>(useHook: () => T) => {
+  const rendered = renderHook(
     () => {
       return { list: useProjects(), hook: useHook() };
     },
     { wrapper },
   );
+  await waitFor(() => {
+    expect(rendered.result.current.list.isSuccess).toBe(true);
+  });
+  return rendered;
 };
 
 describe("project hooks", () => {
@@ -110,13 +114,11 @@ describe("project hooks", () => {
     });
   });
 
-  it("adds a created project to the cached list without fetching it again", async () => {
+  it("fetches the list again after creating a project", async () => {
     const created = buildProject({ uuid: "new", name: "New" });
     vi.mocked(projectsApi.create).mockResolvedValue(created);
-    const { result } = renderWithList(useCreateProject);
-    await waitFor(() => {
-      expect(result.current.list.isSuccess).toBe(true);
-    });
+    const { result } = await renderWithLoadedList(useCreateProject);
+    vi.mocked(projectsApi.list).mockResolvedValue([launch, audit, created]);
 
     await act(() => {
       return result.current.hook.mutateAsync({
@@ -131,16 +133,14 @@ describe("project hooks", () => {
     await waitFor(() => {
       expect(result.current.list.data).toEqual([launch, audit, created]);
     });
-    expect(projectsApi.list).toHaveBeenCalledOnce();
+    expect(projectsApi.list).toHaveBeenCalledTimes(2);
   });
 
-  it("replaces an updated project in the cached list", async () => {
+  it("fetches the list again after updating a project", async () => {
     const renamed = { ...audit, name: "Security audit" };
     vi.mocked(projectsApi.update).mockResolvedValue(renamed);
-    const { result } = renderWithList(useUpdateProject);
-    await waitFor(() => {
-      expect(result.current.list.isSuccess).toBe(true);
-    });
+    const { result } = await renderWithLoadedList(useUpdateProject);
+    vi.mocked(projectsApi.list).mockResolvedValue([launch, renamed]);
 
     await act(() => {
       return result.current.hook.mutateAsync({
@@ -157,30 +157,26 @@ describe("project hooks", () => {
     });
   });
 
-  it("removes a deleted project from the cached list", async () => {
+  it("fetches the list again after deleting a project", async () => {
     vi.mocked(projectsApi.remove).mockResolvedValue(undefined);
-    const { result } = renderWithList(useDeleteProject);
-    await waitFor(() => {
-      expect(result.current.list.isSuccess).toBe(true);
-    });
+    const { result } = await renderWithLoadedList(useDeleteProject);
+    vi.mocked(projectsApi.list).mockResolvedValue([audit]);
 
     await act(() => {
       return result.current.hook.mutateAsync("launch");
     });
 
+    expect(projectsApi.remove).toHaveBeenCalledWith("launch");
     await waitFor(() => {
       expect(result.current.list.data).toEqual([audit]);
     });
   });
 
-  it("fetches the list again when a write fails, in case it's out of date", async () => {
+  it("fetches the list again when a write fails", async () => {
     vi.mocked(projectsApi.remove).mockRejectedValue(
       new ApiError(404, "NOT_FOUND", "Project not found"),
     );
-    const { result } = renderWithList(useDeleteProject);
-    await waitFor(() => {
-      expect(result.current.list.isSuccess).toBe(true);
-    });
+    const { result } = await renderWithLoadedList(useDeleteProject);
     vi.mocked(projectsApi.list).mockResolvedValue([audit]);
 
     await act(async () => {
@@ -193,6 +189,35 @@ describe("project hooks", () => {
       expect(result.current.list.data).toEqual([audit]);
     });
     expect(projectsApi.list).toHaveBeenCalledTimes(2);
+  });
+
+  it("stays pending until the list has been fetched again", async () => {
+    vi.mocked(projectsApi.remove).mockResolvedValue(undefined);
+    const { result } = await renderWithLoadedList(useDeleteProject);
+    let finishRefetch: (projects: Project[]) => void = () => {};
+    vi.mocked(projectsApi.list).mockReturnValue(
+      new Promise((resolve) => {
+        finishRefetch = resolve;
+      }),
+    );
+
+    act(() => {
+      result.current.hook.mutate("launch");
+    });
+
+    await waitFor(() => {
+      expect(projectsApi.list).toHaveBeenCalledTimes(2);
+    });
+    expect(result.current.hook.isPending).toBe(true);
+
+    act(() => {
+      finishRefetch([audit]);
+    });
+
+    await waitFor(() => {
+      expect(result.current.hook.isSuccess).toBe(true);
+    });
+    expect(result.current.list.data).toEqual([audit]);
   });
 
   it("keys every projects query under one prefix", () => {

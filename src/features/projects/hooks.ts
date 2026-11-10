@@ -35,16 +35,7 @@ export const useProjects = (): UseQueryResult<Project[]> => {
   return useQuery(projectQueries.list());
 };
 
-const updateCachedList = (
-  queryClient: QueryClient,
-  update: (projects: Project[]) => Project[],
-): void => {
-  queryClient.setQueryData(projectQueries.list().queryKey, (projects) => {
-    return projects && update(projects);
-  });
-};
-
-const refreshList = (queryClient: QueryClient): Promise<void> => {
+const invalidateProjects = (queryClient: QueryClient): Promise<void> => {
   return queryClient.invalidateQueries({ queryKey: projectQueries.all() });
 };
 
@@ -55,14 +46,11 @@ export const useCreateProject = (): UseMutationResult<
 > => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: projectsApi.create,
-    onSuccess: (created) => {
-      updateCachedList(queryClient, (projects) => {
-        return [...projects, created];
-      });
+    mutationFn: (input: CreateProjectRequest) => {
+      return projectsApi.create(input);
     },
-    onError: () => {
-      return refreshList(queryClient);
+    onSettled: () => {
+      return invalidateProjects(queryClient);
     },
   });
 };
@@ -82,15 +70,8 @@ export const useUpdateProject = (): UseMutationResult<
     mutationFn: ({ uuid, input }: UpdateProjectVariables) => {
       return projectsApi.update(uuid, input);
     },
-    onSuccess: (updated) => {
-      updateCachedList(queryClient, (projects) => {
-        return projects.map((project) => {
-          return project.uuid === updated.uuid ? updated : project;
-        });
-      });
-    },
-    onError: () => {
-      return refreshList(queryClient);
+    onSettled: () => {
+      return invalidateProjects(queryClient);
     },
   });
 };
@@ -98,16 +79,11 @@ export const useUpdateProject = (): UseMutationResult<
 export const useDeleteProject = (): UseMutationResult<void, Error, string> => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: projectsApi.remove,
-    onSuccess: (_, uuid) => {
-      updateCachedList(queryClient, (projects) => {
-        return projects.filter((project) => {
-          return project.uuid !== uuid;
-        });
-      });
+    mutationFn: (uuid: string) => {
+      return projectsApi.remove(uuid);
     },
-    onError: () => {
-      return refreshList(queryClient);
+    onSettled: () => {
+      return invalidateProjects(queryClient);
     },
   });
 };
