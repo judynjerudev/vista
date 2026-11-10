@@ -9,7 +9,6 @@ import { ConfigError, loadBrowserConfig } from "./lib/config";
 import { createQueryClient } from "./lib/queryClient";
 
 const root = createRoot(document.getElementById("root")!);
-// One cache for the whole app, so every page shares the data it fetches.
 const queryClient = createQueryClient();
 
 try {

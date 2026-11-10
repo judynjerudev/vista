@@ -53,7 +53,6 @@ const wrapper = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Renders the hook alongside `useProjects`, so tests can see the cached list.
 const renderWithList = <T,>(useHook: () => T) => {
   return renderHook(
     () => {
@@ -65,7 +64,6 @@ const renderWithList = <T,>(useHook: () => T) => {
 
 describe("project hooks", () => {
   beforeEach(() => {
-    // No retries, so a failed request fails the test straight away.
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });

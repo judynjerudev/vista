@@ -32,8 +32,6 @@ export default defineConfig([
       tseslint.configs.recommended,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
-      // Catches common TanStack Query mistakes, such as a query key that
-      // leaves out a value the query function uses.
       ...pluginQuery.configs['flat/recommended'],
       prettierConfig,
     ],

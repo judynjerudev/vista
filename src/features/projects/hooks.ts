@@ -11,8 +11,6 @@ import type {
 import { getErrorMessage } from "@/lib/http";
 import { projectsApi } from "./api";
 
-// Every projects query key starts with "projects", so one call can refresh
-// or remove all of them.
 export const projectKeys = {
   all: ["projects"] as const,
   list: () => {
@@ -20,8 +18,6 @@ export const projectKeys = {
   },
 };
 
-// The same empty list every time, so components don't re-render for a new
-// `[]` while the first load is in progress.
 const noProjects: Project[] = [];
 
 type UseProjects = {
@@ -30,7 +26,6 @@ type UseProjects = {
   error: string | null;
 };
 
-// Every component that calls this shares one cached list and one request.
 export const useProjects = (): UseProjects => {
   const { data, isPending, error } = useQuery({
     queryKey: projectKeys.list(),
@@ -39,14 +34,11 @@ export const useProjects = (): UseProjects => {
 
   return {
     projects: data ?? noProjects,
-    // Only the first load: a background refresh keeps showing the cache.
     loading: isPending,
     error: error ? getErrorMessage(error, "Failed to load projects") : null,
   };
 };
 
-// The API answers a write with the saved project, so the cached list is
-// updated from that response instead of being fetched again.
 const updateCachedList = (
   queryClient: QueryClient,
   update: (projects: Project[]) => Project[],
@@ -56,8 +48,6 @@ const updateCachedList = (
   });
 };
 
-// A failed write may mean the cached list is out of date, for example a
-// project deleted in another tab, so it's fetched again.
 const refreshList = (queryClient: QueryClient): Promise<void> => {
   return queryClient.invalidateQueries({ queryKey: projectKeys.all });
 };
